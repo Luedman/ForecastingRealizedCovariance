@@ -32,7 +32,11 @@ class LSTMmodel:
             self.forecastHorizon = self.model.layers[-1].output_shape[1]
             self.lookBack = self.model.layers[0].output_shape[1]
 
-            #print("Model Loaded")
+            for layer in self.model.layers:
+                if hasattr(layer, 'rate'):
+                    self.dropout = layer.rate
+
+            print("Model Loaded")
             #print(self.model.summary())
  
     def createModel(self, hybridHAR = False):
@@ -65,9 +69,9 @@ class LSTMmodel:
 
     def train(self, epochs, xTrainLSTM, yTrainLSTM, 
                         xTestLSTM, yTestLSTM, modelname = "LSTM", 
-                        learningRate = 0.00001, decay=1e-6 ,batchSize = 256):
+                        learningRate = 0.00001, batchSize = 256):
 
-        self.model.compile(loss = 'mse', optimizer = Adam(lr=learningRate, clipvalue = 0.5))
+        self.model.compile(loss = 'mse', optimizer = Adam(lr=learningRate, clipvalue = 0.5, decay=1e-12))
     
         tensorboard = TensorBoard(log_dir='./Log' + modelname, 
                                 histogram_freq = 0, 
@@ -77,8 +81,8 @@ class LSTMmodel:
         outputLog = outputLogCallback()
 
         overfitCallback = EarlyStopping(monitor = 'val_loss', 
-                                        min_delta = 0, 
-                                        patience = 100)
+                                        min_delta = 0.00001, 
+                                        patience = 50)
         
         self.model.fit(xTrainLSTM, yTrainLSTM, 
                             epochs = epochs, 

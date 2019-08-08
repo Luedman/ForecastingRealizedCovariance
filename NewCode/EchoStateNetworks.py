@@ -66,6 +66,10 @@ class ESNmodel:
             self.spectralRadius = hyperparameterESN['spectralRadius']
             hyperparameterESN.pop('spectralRadius')
 
+        if ('leakingRate' in hyperparameterESN):
+            self.leakingRate = hyperparameterESN['leakingRate']
+            hyperparameterESN.pop('leakingRate')
+
         if ('connectivity' in hyperparameterESN):
             self.connectivity = hyperparameterESN['connectivity']
             hyperparameterESN.pop('connectivity')
@@ -196,9 +200,10 @@ class ESNmodel:
 
         self.modelResidualMatrix = yTrain[nForgetPoints:] - outputSequence
         
-        global counter
-        print(datetime.now().strftime("%d.%b %Y %H:%M:%S") + " " + str(counter) + " ESN Trained")
-        counter += 1 
+        if False:
+            global counter
+            print(datetime.now().strftime("%d.%b %Y %H:%M:%S") + " " + str(counter) + " ESN Trained")
+            counter += 1 
 
         return
 
@@ -258,39 +263,29 @@ class ESNmodel:
 
     def multiStepAheadForecast(self,xTest, noStepsAhead, startIndex):
 
-        noSamples = 20
+        noSamples = 2
 
         randomStartIndices = np.random.randint(0, self.modelResidualMatrix.shape[0] + 1 - noStepsAhead, size = noSamples)
         randomResidualsMatrix = np.array([self.modelResidualMatrix[randomIndex:randomIndex + noStepsAhead,:] for randomIndex in randomStartIndices])
 
-        prevOutput = xTest[startIndex]
-
         collectedStateMatrix = self.__collectStateMatrix(xTest, 0)
         prevReservoirState = collectedStateMatrix[:,startIndex -1]
 
-        forecastMatrix = np.zeros((noStepsAhead,1))
+        forecastVector = np.zeros((noStepsAhead,1))
+        forecastVector[-1] = xTest[startIndex]
 
-        for residualVector in randomResidualsMatrix:
+        for i in range(0,randomResidualsMatrix.shape[1]):
 
-            forecastVector = np.zeros((noStepsAhead,1))
+            for residualVector in randomResidualsMatrix:
 
-            for i in range(0,len(residualVector)):
+                reservoirState = self.__reservoirState(forecastVector[i-1] + residualVector[i], prevReservoirState)
 
-                #+ residualVector[i]
+                oneStepForecastingSamples = np.matmul(self.reservoirReadout, prevReservoirState)
 
-                reservoirState = self.__reservoirState(prevOutput + residualVector[i], prevReservoirState)
+            forecastVector[i] = np.average(oneStepForecastingSamples)
+            prevReservoirState = reservoirState
 
-                oneStepForecast = np.matmul(self.reservoirReadout, prevReservoirState)
-
-                forecastVector[i] = oneStepForecast
-
-                prevOutput = oneStepForecast
-                prevReservoirState = reservoirState
-
-            if not any([i > 1 for i in forecastVector]):
-                forecastMatrix = np.concatenate((forecastMatrix, forecastVector), axis = 1)
-
-        multiStepAheadForecast = np.mean(forecastMatrix, axis = 1).reshape(noStepsAhead, 1)
+        multiStepAheadForecast = forecastVector
         
         def showForecast():
             # Debug Function
@@ -318,21 +313,23 @@ def searchOptimalParamters():
 
     xTrain, yTrain, xTest, yTest, scaler = dataUtils.loadScaleDataUnivariate(asset, path, fileName, scaleData = True)
 
-    internalNodesRange  = [50]
+    internalNodesRange  = [100]
     shiftRange          = [0]
-    scalingRange        = list(np.round(np.linspace(0.1,2,num = 2),4))
-    specRadRange        = list(np.round(np.linspace(0.1,1,num = 2),4))
+    scalingRange        = [1]
+    specRadRange        = list(np.round(np.linspace(0.1,1.1,num = 20),4))
     regLambdaRange      = [0.01, 1e-4, 1e-6 ,1e-8,1e-10, 1e-12]
+    connectivityRange   = [0.1,0.2,0.3,0.05]
+    leakingRate         = list(np.round(np.linspace(0.0,1.0,num = 5),2))
     seed                = [1]
-    connectivityRange   = [0.2]
 
     hyperParameterSpace = list(cartProduct(internalNodesRange, 
                                                     scalingRange, 
                                                     shiftRange, 
                                                     specRadRange,
                                                     regLambdaRange,
-                                                    seed, 
-                                                    connectivityRange))
+                                                    connectivityRange,
+                                                    leakingRate,
+                                                    seed))
 
     totalIterations = len(hyperParameterSpace)
     interationNo = 0
@@ -340,19 +337,23 @@ def searchOptimalParamters():
 
     for parameterSet in hyperParameterSpace:
 
-        hyperparameterESN = {'internalNodes':     parameterSet[0],
+        hyperparameterESN = {'internalNodes':    parameterSet[0],
                             'inputScaling':      parameterSet[1],
                             'inputShift':        parameterSet[2],
                             'spectralRadius':    parameterSet[3],
                             'regressionLambda':  parameterSet[4],
                             'connectivity':      parameterSet[5],
-                            'seed':              parameterSet[6]}
+                            'leakingRate':       parameterSet[6],
+                            'seed':              parameterSet[7]}
         
-        ESN = ESNmodel(1,1,parameterSet[0], hyperparameterESN)
+        testEsn = ESNmodel(1,1,hyperparameterESN)
         
-        ESN.fit(xTrain, yTrain, 100)
-        rsmeTestRun, _ = ESN.evaluate(xTest, yTest, scaler)
-        #rsmeTestRun = np.average(dataUtils.calculateRSMEVector(xTest[:250], yTest[:250], ESN, 10, scaler))
+        testEsn.fit(xTrain, yTrain, 100)
+        #rsmeTestRun, _ = testEsn.evaluate(xTest, yTest, scaler)
+        rsmeTestRun = np.average(dataUtils.calculateRSMEVector(xTest[:250], 
+                                                                yTest[:250], 
+                                                                testEsn, 
+                                                                10, scaler))
 
         if rsmeTestRun < minRMSE:
             minRMSE = rsmeTestRun
@@ -376,13 +377,13 @@ def evaluateESN():
 
     xTrain, yTrain, xTest, yTest, scaler = dataUtils.loadScaleDataUnivariate(asset, path, fileName)
 
-    hyperparameterESN = {'internalNodes':    200,
-                        'inputScaling':      1.0,
-                        'inputShift':        0,
-                        'spectralRadius':    0.7,
-                        'regressionLambda':  1e-6,
-                        'connectivity':      0.1,
-                        'seed':              2}
+    hyperparameterESN = {'internalNodes':       100, 
+                            'inputScaling':     1, 
+                            'inputShift':       0, 
+                            'spectralRadius':   0.1, 
+                            'regressionLambda': 1e-10, 
+                            'connectivity':     0.3, 
+                            'seed':             1}
 
     testEsn = ESNmodel(1,1,hyperparameterESN)
 
@@ -417,7 +418,7 @@ def evaluateESN():
     
 
 if __name__ == "__main__":
-    #searchOptimalParamters()
-    evaluateESN()
+    searchOptimalParamters()
+    #evaluateESN()
 
     

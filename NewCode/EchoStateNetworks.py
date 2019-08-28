@@ -1,8 +1,3 @@
-# ToDo: 
-# Use Tanh
-#
-#
-
 import numpy as np
 import pandas as pd
 import scipy as sc
@@ -150,8 +145,7 @@ class ESNmodel:
             self.inputScaling * np.matmul(self.inputMask, prevOutput).reshape(self.internalNodes, self.nInputNodes) + self.inputShift
 
         reservoirStateResult = self.__activationFunction(activation,"Sigmoid")
-
-        reservoirStateResult = (1 - self.leakingRate) * prevReservoirState + self.leakingRate * reservoirStateResult
+        reservoirStateResult = - self.leakingRate * prevReservoirState + reservoirStateResult
 
         assert reservoirStateResult.shape == (self.internalNodes, self.nInputNodes)
 
@@ -187,6 +181,7 @@ class ESNmodel:
         
         try:
             self.reservoirReadout = np.matmul(np.linalg.inv(gamma), cov).T
+            self.collectedStateMatrixTraining = collectedStateMatrix
             self.networkTrained = True
         except:
             self.reservoirReadout = np.ones((yTrain.shape[1], self.internalNodes))
@@ -197,6 +192,14 @@ class ESNmodel:
 
         outputSequence = self.__outputActivationFunction(np.matmul(self.reservoirReadout, collectedStateMatrix)).T
         outputSequence = (outputSequence - np.ones((outputSequence.shape))* self.inputShift) / self.inputScaling
+        
+        def showOutputSequence(start = 0, end = -1):
+            #Debug Function
+            actual = xTrain[nForgetPoints:]
+            plt.plot(actual[start:end], label = "Actual")
+            plt.plot(outputSequence[start:end], label = "ESN Fit")
+            plt.legend()
+            plt.show()
 
         self.modelResidualMatrix = yTrain[nForgetPoints:] - outputSequence
         
@@ -207,29 +210,29 @@ class ESNmodel:
 
         return
 
-    def evaluate(self, xTest, yTest, scaler, showPlot = False):
+    def evaluate(self, data, showPlot = False):
 
-        assert xTest.shape[1] == yTest.shape[1], "X and Y should be of same lenght (shape[1])"
+        assert data.xTest.shape[1] == data.yTest.shape[1], "X and Y should be of same lenght (shape[1])"
 
-        collectedStateMatrix = self.__collectStateMatrix(xTest,100)
+        collectedStateMatrix = self.__collectStateMatrix(data.xTest,100)
 
-        output = self.test(xTest, collectedStateMatrix)
+        output = self.test(data.xTest, collectedStateMatrix)
         
-        if scaler is not None:
-            yTest = scaler.inverse_transform(yTest)
-            output = scaler.inverse_transform(output)
+        if data.scaler is not None:
+            data.yTest = data.scaler.inverse_transform(data.yTest)
+            output = data.scaler.inverse_transform(output)
 
         yHat = np.exp(output)
-        yTest = np.exp(yTest)
+        data.yTest = np.exp(data.yTest)
 
         try:
-            rmse = np.sqrt(mean_squared_error(yTest[-yHat.shape[0]:], yHat))
+            rmse = np.sqrt(mean_squared_error(data.yTest[-yHat.shape[0]:], yHat))
         except:
             rmse = float('inf')
             print("Error when calculating RSME")
 
         if showPlot:
-            plt.plot(np.exp(yTest[-yHat.shape[0]:]), label = "Var")
+            plt.plot(np.exp(data.yTest[-yHat.shape[0]:]), label = "Var")
             plt.plot(yHat, label = "ESN")
             plt.legend() 
             plt.show()
@@ -261,38 +264,60 @@ class ESNmodel:
 
         return oneStepAheadForecast
 
-    def multiStepAheadForecast(self,xTest, noStepsAhead, startIndex):
+    def multiStepAheadForecast(self, data, noStepsAhead, startIndex, windowMode = "Expanding", windowSize = 400):
+        
+        noSamples = 1
+        assert self.networkTrained == True, "ESN is not trained of failed in the Process"
 
-        noSamples = 2
+        if windowMode.upper() == "EXPANDING":
+            newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
+            newyTrain = np.concatenate([data.yTrain, data.yTest[:startIndex]])
+            self.fit(newxTrain[:], newyTrain[:], 100)
+        elif windowMode.upper() == "ROLLING":
+            newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
+            newyTrain = np.concatenate([data.yTrain, data.yTest[:startIndex]])
+            self.fit(newxTrain[-windowSize:], newyTrain[-windowSize:], 100)
+        elif windowMode.upper() == "FIXED":
+            pass
+        else: print("Window Mode not recognized")
 
         randomStartIndices = np.random.randint(0, self.modelResidualMatrix.shape[0] + 1 - noStepsAhead, size = noSamples)
         randomResidualsMatrix = np.array([self.modelResidualMatrix[randomIndex:randomIndex + noStepsAhead,:] for randomIndex in randomStartIndices])
 
-        collectedStateMatrix = self.__collectStateMatrix(xTest, 0)
-        prevReservoirState = collectedStateMatrix[:,startIndex -1]
+        prevReservoirState = self.collectedStateMatrixTraining[:,-1].reshape(-1,1)
 
         forecastVector = np.zeros((noStepsAhead,1))
-        forecastVector[-1] = xTest[startIndex]
+        forecastVector[-1] = data.xTest[startIndex]
 
         for i in range(0,randomResidualsMatrix.shape[1]):
 
+            oneStepForecastingSamples = []
+
             for residualVector in randomResidualsMatrix:
 
-                reservoirState = self.__reservoirState(forecastVector[i-1] + residualVector[i], prevReservoirState)
+                reservoirState = self.__reservoirState(forecastVector[i-1], prevReservoirState)
+                #residualVector[i]
 
-                oneStepForecastingSamples = np.matmul(self.reservoirReadout, prevReservoirState)
+                oneStepForecast = self.__outputActivationFunction(np.matmul(self.reservoirReadout, prevReservoirState))
+                oneStepForecast = (oneStepForecast - self.inputShift)/self.inputScaling
 
-            forecastVector[i] = np.average(oneStepForecastingSamples)
-            prevReservoirState = reservoirState
-
-        multiStepAheadForecast = forecastVector
+                if np.absolute(oneStepForecast) < 1.01:
+                    oneStepForecastingSamples.append(oneStepForecast)
+            
+            if oneStepForecastingSamples:
+                forecastVector[i] = np.average(oneStepForecastingSamples)
+                prevReservoirState = reservoirState
+            else:
+                #print("Error when forecasting")
+                forecastVector[i] = 0
+                prevReservoirState = reservoirState
         
         def showForecast():
             # Debug Function
             ax1 = plt.subplot(2, 1, 1)
             ax1.set_title("Actual vs Forecast")
-            ax1.plot(multiStepAheadForecast, label = "ESN")
-            ax1.plot(xTest[startIndex: startIndex + noStepsAhead], label = "actual")
+            ax1.plot(forecastVector, label = "ESN")
+            ax1.plot(data.xTest[startIndex: startIndex + noStepsAhead], label = "actual")
             ax1.legend()
             ax2 = plt.subplot(2, 1, 2)
             ax2.set_title("Reservoir Readout")
@@ -300,26 +325,32 @@ class ESNmodel:
             plt.tight_layout()
             plt.show()
 
-        return multiStepAheadForecast
+        return forecastVector
 
 
 def searchOptimalParamters():
     print("Hyperparameter Search")
+
+    # Disable Warnings (especially overflow)
+    import warnings
+    warnings.filterwarnings("ignore")
 
     # USER INPUT Specifiy Data Path
     path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/Preprocessing/"
     fileName    = "realized.library.0.1.csv"
     asset       = "DJI"
 
-    xTrain, yTrain, xTest, yTest, scaler = dataUtils.loadScaleDataUnivariate(asset, path, fileName, scaleData = True)
+    data = dataUtils.loadScaleDataUnivariate(asset, path, fileName, scaleData = True)
 
-    internalNodesRange  = [100]
+    internalNodesRange  = [50,100,200,400]
     shiftRange          = [0]
     scalingRange        = [1]
-    specRadRange        = list(np.round(np.linspace(0.1,1.1,num = 20),4))
-    regLambdaRange      = [0.01, 1e-4, 1e-6 ,1e-8,1e-10, 1e-12]
-    connectivityRange   = [0.1,0.2,0.3,0.05]
-    leakingRate         = list(np.round(np.linspace(0.0,1.0,num = 5),2))
+    specRadRange        = [0.05, 0.1, 0.15]
+    #list(np.round(np.linspace(0.1,1.1,num = 20),4))
+    regLambdaRange      = [1e-7 ,1e-8, 1e-9]
+    connectivityRange   = [0.2, 0.1, 0.05, 0.025]
+    leakingRate         = [0]
+    #list(np.round(np.linspace(0.0,1.0,num = 4),2))
     seed                = [1]
 
     hyperParameterSpace = list(cartProduct(internalNodesRange, 
@@ -348,12 +379,9 @@ def searchOptimalParamters():
         
         testEsn = ESNmodel(1,1,hyperparameterESN)
         
-        testEsn.fit(xTrain, yTrain, 100)
+        testEsn.fit(data.xTrain, data.yTrain, 100)
         #rsmeTestRun, _ = testEsn.evaluate(xTest, yTest, scaler)
-        rsmeTestRun = np.average(dataUtils.calculateRSMEVector(xTest[:250], 
-                                                                yTest[:250], 
-                                                                testEsn, 
-                                                                10, scaler))
+        rsmeTestRun = np.average(dataUtils.calculateRSMEVector(data, testEsn, 15, silent = False))
 
         if rsmeTestRun < minRMSE:
             minRMSE = rsmeTestRun
@@ -375,38 +403,40 @@ def evaluateESN():
     fileName    = "realized.library.0.1.csv"
     asset       = "DJI"
 
-    xTrain, yTrain, xTest, yTest, scaler = dataUtils.loadScaleDataUnivariate(asset, path, fileName)
-
-    hyperparameterESN = {'internalNodes':       100, 
-                            'inputScaling':     1, 
-                            'inputShift':       0, 
-                            'spectralRadius':   0.1, 
-                            'regressionLambda': 1e-10, 
-                            'connectivity':     0.3, 
-                            'seed':             1}
+    data = dataUtils.loadScaleDataUnivariate(asset, path, fileName)
+    
+    hyperparameterESN = {'internalNodes': 100, 
+                            'inputScaling': 1, 
+                            'inputShift': 0, 
+                            'spectralRadius': 0.05, 
+                            'regressionLambda': 1e-09, 
+                            'connectivity': 0.025, 
+                            'leakingRate': 0, 
+                            'seed': 1}
 
     testEsn = ESNmodel(1,1,hyperparameterESN)
 
-    testEsn.fit(xTrain, yTrain, 100)
+    testEsn.fit(data.xTrain, data.yTrain, 100)
 
-    dataHAR = dataUtils.convertHAR(xTrain)
+    dataHAR = dataUtils.convertHAR(data.xTrain)
     HAR = HeterogeneousAutoRegressive.HARmodel()
     HAR.fit(dataHAR, silent=True)
 
-    rsmeTestRun, _ = testEsn.evaluate(xTest, yTest, scaler)
-    print("RSEM Test Run: " + str(rsmeTestRun))
+    #rsmeTestRun, _ = testEsn.evaluate(data)
+    #print("RSEM Test Run: " + str(rsmeTestRun))
+    
+    cut = 250
+    data.xTest = data.xTest[:cut]
+    data.yTest = data.yTest[:cut]
 
-    esnRSME, esnRSME2 = dataUtils.calculateRSMEVector(xTest[:250], yTest[:250], testEsn, 30, 
-                        scaler, RSMETimeAxis = True,
-                        xTrain = xTrain, 
-                        yTrain = yTrain)
+    esnRSME = dataUtils.calculateRSMEVector(data, testEsn, 30, silent = False)
 
-    esnHAR, esnHAR2 = dataUtils.calculateRSMEVector(xTest[:250], yTest[:250], HAR, 30, scaler, RSMETimeAxis = True)
+    harRSME = dataUtils.calculateRSMEVector(data, HAR, 30, silent = True)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.plot(esnRSME, label = "ESN")
-    ax.plot(esnHAR, label = "HAR")
+    ax.plot(harRSME, label = "HAR")
     ax.set_title('Echo State HAR RSME Forecasting Error')
     ax.text(0.95, 0.01, dumps(hyperparameterESN,indent=2),
         verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
@@ -418,7 +448,7 @@ def evaluateESN():
     
 
 if __name__ == "__main__":
-    searchOptimalParamters()
-    #evaluateESN()
+    #searchOptimalParamters()
+    evaluateESN()
 
     

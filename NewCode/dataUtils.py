@@ -3,8 +3,19 @@ import pandas as pd
 
 from inspect import stack
 from sklearn.preprocessing import MinMaxScaler
+from matplotlib import pyplot as plt
 
 np.random.seed(1)
+
+class Data:
+
+    def __init__(self, xTrain, yTrain, xTest, yTest, scaler):
+
+        self.xTrain = xTrain
+        self.yTrain = yTrain
+        self.xTest = xTest
+        self.yTest = yTest
+        self.scaler = scaler
 
 def dataPrecprocessingUnivariate(path, fileName):
 
@@ -14,29 +25,29 @@ def dataPrecprocessingUnivariate(path, fileName):
     rawData['Dates'] = pd.to_datetime(rawData['Dates'], format = '%Y%m%d').dt.date
     rawData = rawData.set_index('Dates')
 
-    data = rawData[['DJI_rv', 
+    preprocessedData = rawData[['DJI_rv', 
                'FTSE_rv', 
                'GDAXI_rv', 
                'N225_rv', 
                'EUR_rv']]
 
-    data.columns = data.columns.str.replace("_rv", "")
+    preprocessedData.columns = preprocessedData.columns.str.replace("_rv", "")
 
-    data = data.interpolate(limit = 3).dropna()
+    preprocessedData = preprocessedData.interpolate(limit = 3).dropna()
 
-    for i in range(0, len(data.columns)):
-        data["Log" + data.columns[i]] = np.log(data[data.columns[i]])
+    for i in range(0, len(preprocessedData.columns)):
+        preprocessedData["Log" + preprocessedData.columns[i]] = np.log(preprocessedData[preprocessedData.columns[i]])
 
-    return data
+    return preprocessedData
 
 
 def loadScaleDataUnivariate(asset, path, fileName, scaleData = True):
 
     scaler = None
 
-    data = dataPrecprocessingUnivariate(path, fileName)
+    preprocessedData = dataPrecprocessingUnivariate(path, fileName)
 
-    timeSeries = np.array(data["Log" + asset]).reshape(len(data["Log" + asset]), 1)
+    timeSeries = np.array(preprocessedData["Log" + asset]).reshape(len(preprocessedData["Log" + asset]), 1)
 
     nTrainingExamples = int((timeSeries.shape[0])*0.8)
     yTrain = timeSeries[1:nTrainingExamples].reshape(nTrainingExamples - 1,1)
@@ -56,7 +67,7 @@ def loadScaleDataUnivariate(asset, path, fileName, scaleData = True):
     assert xTrain.shape == yTrain.shape
     assert xTest.shape == yTest.shape
 
-    return xTrain, yTrain, xTest, yTest, scaler
+    return Data(xTrain, yTrain, xTest, yTest, scaler)
 
 def convertDataLSTM(xVector, lookBack, forecastHorizon):
 
@@ -110,36 +121,26 @@ def convertHAR(xVector):
 
     return dataHAR
 
-def calculateRSMEVector(xTest, yTest, model, forecastHorizon, scaler, 
-                        RSMETimeAxis = False,
-                        xTrain = None, 
-                        yTrain = None,
-                        silent = True):
+def calculateRSMEVector(data, model, forecastHorizon, silent = True):
 
     errorMatrix = []
 
-    for startIndex in range(23, xTest.shape[0] - forecastHorizon):
+    for startIndex in range(23, data.xTest.shape[0] - forecastHorizon):
         
         if silent is False and startIndex % 25 == 0: print("Evaluation is at index: " + str(startIndex) + "/ " \
-            + str(xTest.shape[0] - forecastHorizon))
-
-        if model.modelType == "ESN" and stack()[1][3] is not "searchOptimalParamters":
-            newxTrain = np.concatenate([xTrain, xTest[:startIndex]])
-            newyTrain = np.concatenate([yTrain, yTest[:startIndex]])
-            model.fit(newxTrain[:-200], newyTrain[:-200], 100)
-            #print("Model fitted: ", str(startIndex))
+            + str(data.xTest.shape[0] - forecastHorizon))
         
-        forecast = model.multiStepAheadForecast(xTest, forecastHorizon, startIndex)
+        forecast = model.multiStepAheadForecast(data, forecastHorizon, startIndex)
 
         if model.modelType == "HAR" or model.modelType == "ESN":
-            actual = yTest[startIndex : startIndex + forecastHorizon]
+            actual = data.yTest[startIndex : startIndex + forecastHorizon]
 
         if model.modelType == "LSTM":
-            actual = yTest[startIndex:startIndex + 1].reshape(-1, 1).T
+            actual = data.yTest[startIndex:startIndex + 1].reshape(-1, 1).T
 
-        if scaler is not None:
-            forecast = scaler.inverse_transform(forecast)
-            actual = scaler.inverse_transform(actual)
+        if data.scaler is not None:
+            forecast = data.scaler.inverse_transform(forecast)
+            actual = data.scaler.inverse_transform(actual)
 
         assert actual.shape == forecast.shape, "actual " + str(actual.shape) +  \
             " and forecast shape " + str(forecast.shape) + " do not match"
@@ -148,12 +149,32 @@ def calculateRSMEVector(xTest, yTest, model, forecastHorizon, scaler,
         errorMatrix.append(squaredErrorVector)
 
         RSMEVectorPerTimeStep = np.sqrt(np.average(errorMatrix, axis = 0))
-    
-    if RSMETimeAxis:
-        RSMEVectorTimeAxis = np.sqrt(np.average(errorMatrix, axis = 1))
-        return RSMEVectorPerTimeStep, RSMEVectorTimeAxis
-    else:
-        return RSMEVectorPerTimeStep 
+
+        def showForecast():
+            # Debug Function
+            ax1 = plt.subplot(3, 1, 1)
+            ax1.set_title("Actual vs Forecast")
+            ax1.plot(np.exp(forecast), label = "ESN")
+            ax1.plot(np.exp(actual), label = "Actual")
+            ax1.legend()
+
+            ax2 = plt.subplot(3, 1, 2)
+            for i in range(0,len(errorMatrix)):
+                shade = str(i/(len(errorMatrix)+0.1))
+                ax2.plot(np.sqrt(errorMatrix[i]), color=shade, linestyle='dotted')
+            ax2.plot(RSMEVectorPerTimeStep, color='blue', marker ="x" )
+            ax2.set_title("Error Vectors.")
+
+            ax3 = plt.subplot(3, 1, 3)
+            ax3.set_title("Error Vector Avg. Index: " +  str(startIndex))
+            ax3.plot(RSMEVectorPerTimeStep, color='blue', marker ="x" )
+
+            plt.tight_layout()
+            plt.show()
+        
+        debug = 0
+
+    return RSMEVectorPerTimeStep 
 
 
 

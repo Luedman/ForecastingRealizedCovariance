@@ -30,11 +30,11 @@ class HARmodel:
 
         return estimate
 
-    def multiStepAheadForecast(self, xTest, forecastHorizon, startIndex):
+    def multiStepAheadForecast(self, data, forecastHorizon, startIndex):
 
         assert startIndex - 22 > 0
 
-        historicDataVector = xTest[startIndex - 22: startIndex]
+        historicDataVector = data.xTest[startIndex - 22: startIndex]
 
         def predict(forecastHorizon, forecast, historicDataVector):
 

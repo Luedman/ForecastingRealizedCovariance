@@ -1,1 +1,0 @@
-path = fileparts(mfilename('fullpath'));addpath(path);data = dataframe("Test_Results.csv");data2 = load("Test_Results.csv");disp(data2.file_names_list);pos_names = strfind (data2.file_names_list, ".csv") + 3[eye(1),strfind (data2.file_names_list, ".csv") + 3]filenames = [];file_names_list = []adata2.file_names_list(:,1:46+3)

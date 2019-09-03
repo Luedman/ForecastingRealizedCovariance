@@ -1,0 +1,2461 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\numberwithin{equation}{section}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement H
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine biblatex-natbib
+\cite_engine_type authoryear
+\biblio_style plain
+\biblatex_bibstyle authoryear
+\biblatex_citestyle authoryear
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+GARCH Original Paper
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Theoretical Introduction
+\end_layout
+
+\begin_layout Standard
+(Intro Text)
+\end_layout
+
+\begin_layout Subsection
+Feedforward Neural Networks
+\end_layout
+
+\begin_layout Standard
+The key priciples of Artificial neural networks (ANN)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "ANN"
+description "Artificial Neural Network"
+literal "false"
+
+\end_inset
+
+ date back to the 40s where 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "mcculloch1943logical"
+literal "false"
+
+\end_inset
+
+ published their logical calculus for nervous activity stating that for
+ 
+\begin_inset Quotes eld
+\end_inset
+
+any logical expression satisfying certain conditions, one can find a net
+ behaving in the fashion it describes
+\begin_inset Quotes erd
+\end_inset
+
+.
+ A few years later Donald Hebb published his widely renowned neuroscientific
+ Hebbian Theory in which he describes the ability of neurons to learn through
+ strengthening the connection between them 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "hebb1949organization"
+literal "false"
+
+\end_inset
+
+.
+ For that reason ANNs are also sometimes referred as a way of Hebbian learning.
+\end_layout
+
+\begin_layout Standard
+Especially Feedforward Neural Networks (FNN) 
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "FNN"
+description "Feed Forward Neural Network"
+literal "false"
+
+\end_inset
+
+ are one of the most commonly used yet simplest ANN architectures.
+ They usually exhibit a layered structure of activation functions where
+ the information flows from the input layer to the subsequent hidden and
+ output layers.
+ Particularly multilayer perceptrons (MLP)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "MLP"
+description "Multilayer Perceptron"
+literal "false"
+
+\end_inset
+
+ with nonlinear activation functions are used for a wide rage of applications.
+\end_layout
+
+\begin_layout Standard
+The reason why neural networks are so powerful is their ability to fit functions
+ of higher dimensions and consequently map much more complex relationships
+ between input and output vectors than linear models.
+ In order to achieve that, a multidimensional error function has to be minimized.
+ After feeding the training examples of one training iteration through the
+ network (forward pass), the average error is calculated and passed back
+ into the network (backward pass).
+ To do so, the loss function calculates the average loss over all training
+ examples by comparing the results of the output layer to the true labels.
+ Starting at the output layer, the purpose of back-propagation now is to
+ find the partial derivatives of the loss function w.r.t.
+ to each individual weight in that layer.
+ Then, the algorithm iterates back to the input layer and tries to calculate
+ the partial derivatives of the activation functions in the hidden layers.
+ Since neural networks are essentially huge nested functions, back-propagation
+ can make use of the chain rule in order to derive those.
+ That way, it is possible to calculate partial derivatives for each weight
+ even for very deep neural networks.
+ This structure also allows to vectorize forward passes and backward propagation
+ which is useful for notation and algorithmic implementation.
+ Once those derivatives are calculated, gradient descent updates each weight
+ by subtracting the partial derivative times the learning rate from the
+ respective weight.
+ Every weight update now shifts the weights more to a value where the loss
+ function in minimized 
+\begin_inset CommandInset citation
+LatexCommand citep
+before "see"
+key "bishop1995neural"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+Architecture
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Feed Forward Neural Network"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ shows the general architecture of a FNN or MLP.
+ The elements 
+\begin_inset Formula $x^{(i)}\in\mathbb{R}^{n_{x}}$
+\end_inset
+
+ denote the input vector for training example 
+\begin_inset Formula $i$
+\end_inset
+
+.
+ This results in input matrix 
+\begin_inset Formula $X\in\mathbb{R}^{n_{x}\times I}$
+\end_inset
+
+ with dimensions 
+\begin_inset Formula $n_{x}$
+\end_inset
+
+ as input size of the network and 
+\begin_inset Formula $I$
+\end_inset
+
+ the total number of training examples.
+ 
+\begin_inset Formula $a_{n}^{[l]}$
+\end_inset
+
+ denotes the 
+\begin_inset Formula $n^{th}$
+\end_inset
+
+ activation in Layer 
+\begin_inset Formula $l$
+\end_inset
+
+ and 
+\begin_inset Formula $\widehat{y}_{n}^{(i)}$
+\end_inset
+
+ represents the prediction for label 
+\begin_inset Formula $n$
+\end_inset
+
+ and example 
+\begin_inset Formula $i$
+\end_inset
+
+.
+ The vector 
+\begin_inset Formula $b^{[l]}\in\mathbb{R}^{N^{[l]}\times1}$
+\end_inset
+
+ contains the bias constants 
+\begin_inset Formula $b_{n}^{[l]}$
+\end_inset
+
+ for layer 
+\begin_inset Formula $l$
+\end_inset
+
+.
+ All layers are connected via a weight matrices 
+\begin_inset Formula $W^{[l]}\in\mathbb{R}^{N^{[l-1]}\times N^{[l]}}$
+\end_inset
+
+ that contain the internode weights 
+\begin_inset Formula $w_{n,j}^{[l]}$
+\end_inset
+
+ to connect node 
+\begin_inset Formula $i$
+\end_inset
+
+ from the preceding layer to node 
+\begin_inset Formula $j$
+\end_inset
+
+ of the subsequent one.
+ 
+\begin_inset Formula $N^{[l]}$
+\end_inset
+
+ is the number of nodes per layer and 
+\begin_inset Formula $M$
+\end_inset
+
+ denotes the number of layers in the network.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/FNN.png
+	scale 50
+	rotateOrigin centerBottom
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Feed Forward Neural Network
+\begin_inset CommandInset label
+LatexCommand label
+name "Feed Forward Neural Network"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The activations for a given layer are calculated by multiplying the weights
+ with either the input vector (in the first layer) or the output of the
+ previous layer (
+\begin_inset Formula $a^{[l-1]}$
+\end_inset
+
+), whereby the activation function of layer 
+\begin_inset Formula $l$
+\end_inset
+
+ is denoted by 
+\begin_inset Formula $g^{[l]}$
+\end_inset
+
+ .
+ The latter is a threshold function that that has an output of (close to)
+ zero if the input values a low or and an high output if the weighted sum
+ of the input values is high.
+ Initially, sigmoid or logistic functions were widely used (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:Sigmoid"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+) but in todays applications, Rectifier Linear Units (ReLU
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "ReLU"
+description "Rectifier Linear Unit"
+literal "false"
+
+\end_inset
+
+, see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: ReLU"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+) became increasly popular since their mathematical properties are better
+ suited for the gradient descent algorithm as demonstrated below.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+g(z)=sig(z)=\frac{1}{1+e^{-z}}\label{eq:Sigmoid}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dg(z)}{dz}=sig(z)(1-sig(z))\label{eq: Sigmoid Derivative}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+g(z)=\max(0,z)\label{eq: ReLU}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dg(z)}{dz}=\begin{cases}
+0 & \textrm{if }z\leq0\\
+1 & \text{otherwise}
+\end{cases}\label{eq: ReLU Derivative}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Back-propagation
+\end_layout
+
+\begin_layout Standard
+In order to make a prediction 
+\begin_inset Formula $\hat{y}^{(i)}$
+\end_inset
+
+, an input vector 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $x^{(i)}$
+\end_inset
+
+ is passed through the network with a forward pass like described in algorithm
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Feed Forward Pass"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ The resulting prediction error is then passed then back in the network
+ in order to optimize the weights and resulting prediction error.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Formula $a^{[0]}=x^{(i)}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+for 
+\begin_inset Formula $l=1,...,L$
+\end_inset
+
+ do:
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad$
+\end_inset
+
+for 
+\begin_inset Formula $n=1,...N^{[l]}$
+\end_inset
+
+ do:
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad\qquad$
+\end_inset
+
+
+\begin_inset Formula $z_{n}^{[l]}=\underset{j}{\sum}w_{n,j}^{[l]}a_{n}^{[l-1]}+b_{n}^{[l]}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad\qquad$
+\end_inset
+
+
+\begin_inset Formula $a_{n}^{[l]}=g^{[l]}(z_{n}^{[l]})$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad$
+\end_inset
+
+end for
+\end_layout
+
+\begin_layout Plain Layout
+end for
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\hat{y_{n}}^{(i)}=a_{n}^{[L]}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Feed Forward Pass
+\begin_inset CommandInset label
+LatexCommand label
+name "Feed Forward Pass"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The inner loop calculates the respective activation per node and the outer
+ one repeats that procedure for every layer, starting with the input values
+ of neural network and iterating to the output layer.
+ The error function 
+\begin_inset Formula $\mathcal{L}$
+\end_inset
+
+ typically is a mean squared error (MSE
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "MSE"
+description "Mean Squared Error"
+literal "false"
+
+\end_inset
+
+) or of similar kind.
+ The total loss of the test and training examples will be calculated as
+ average over all losses (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: Loss Functuion"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ 
+\begin_inset Formula 
+\begin{equation}
+J=\frac{1}{m}\stackrel[i=1]{m}{\sum}\mathcal{L}_{i}(y^{(i)},\hat{y}^{(i)})\label{eq: Loss Functuion}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Like many statistical models, neural networks are fitted by minimizing the
+ error function.
+ Unlike many regression methods however, one cannot set the derivative of
+ the loss function to zero and derive an solution for the optimal weights
+ analytically but instead one has to rely on numerical methods such as gradient
+ descent.
+ Like mentioned above, the nested structure of neural networks allows to
+ derive the derivatives with respect to the weights by multiplying the correspon
+ding partial derivatives iterating the computational graph backwards.
+ This procedure is called back-propagation 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "rumelhart1988learning"
+literal "false"
+
+\end_inset
+
+.
+ So for the output layer 
+\begin_inset Formula $L$
+\end_inset
+
+, the gradient is derived as follows: 
+\begin_inset Formula 
+\begin{equation}
+\frac{dJ}{dw_{n,j}^{[L]}}=\frac{dJ}{dz_{n}^{[L]}}\frac{dz_{n}^{[L]}}{dw_{n,j}}\label{eq:dJ/dw output layer}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{align}
+\frac{dJ}{dz_{n}^{[L]}} & =\frac{dJ}{d\hat{y}}\frac{d\hat{y}}{dz_{n}^{[L]}}=\frac{dJ}{d\hat{y}}\frac{dg^{[L]}(z^{[L]})}{dz_{n}^{[L]}}=\delta_{n}^{*}\label{eq: dJ/dz}\\
+\frac{dz^{[L]}}{dw_{n,j}^{[L]}} & =a^{[L-1]}\label{eq:dz/dw}
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+plugging 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dJ/dz"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:dz/dw"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ into 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:dJ/dw output layer"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, this leads to
+\begin_inset Formula 
+\begin{equation}
+\frac{dJ}{dw_{n,j}^{[L]}}=\delta_{n}^{*}a_{n}^{[L-1]}\label{eq: gradient output layer}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Generally, the gradients of the preceding layer 
+\begin_inset Formula $L-1$
+\end_inset
+
+ are calculated by iterating the error back into the network and applying
+ the chain rule
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dJ}{dw_{n,j}^{[L-1]}}=\frac{dJ}{dz_{n}^{[L-1]}}\frac{dz_{n}^{[L-1]}}{dw_{n,j}^{[L-1]|}}\label{eq:dJ/dw preceeding layers}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\frac{dJ}{dz_{n}^{[L-1]}} & =\sum_{n}\underset{\delta_{n}^{*}}{\underbrace{\frac{dJ}{d\hat{y_{n}}}\frac{dg^{[L]}(z_{n}^{[L]})}{dz_{n}^{[L]}}}}\frac{dz_{n}^{[L]}}{dz_{n}^{[L-1]}}\label{eq: dJ/dz(L-k)}\\
+ & =\frac{dg^{[L]}(z^{[L]})}{dz^{[L]}}\sum_{n}\delta_{n}^{*}w_{n,j}^{[L-1]}\nonumber \\
+ & =\delta_{n}^{[L-k]}\nonumber \\
+\nonumber \\
+\frac{dz_{n}^{[L-1]}}{dw_{n,j}^{[L-1]}} & =a^{[L-1]}\label{eq: dz(L-K)/dw}
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+if you plug in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dJ/dz(L-k)"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dz(L-K)/dw"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:dJ/dw preceeding layers"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ you get the respective derivatives of the hidden layers
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dJ}{dw_{n,j}^{[L-1]}}=\delta_{n}^{[L-1]}a^{[L-1]}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The derivation for 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $\frac{dJ}{db_{n}^{[L-k]}}$
+\end_inset
+
+ follows the same logic and is omitted here.
+ The gradients of the deeper layers are then calculated by adding the partial
+ derivatives to equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dJ/dz(L-k)"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ For further reading see 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "goodfellow2016deep,bishop1995neural"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+Gradient Descent
+\end_layout
+
+\begin_layout Standard
+In order to minimize the error function, there are multiple approaches that
+ are based on on the gradient method by Louis Cauchy.
+ The key idea to calculate the derivative in a given point and then move
+ the point towards a direction opposite to the direction of the slope.
+ The step size or learning rate 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ is a hyperparameter that is manually choosen.
+ Ideally, the algorithm converges to a global minimum after a sufficient
+ number of iterations and a learning rate that is small enough to avoid
+ constantly jumping over the optimum.
+ In the machine learning domain, there are mainly three types of gradient
+ descent that come with different advantages and disadvantages.
+ Stochastic gradient descent (SGD
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "SDG"
+description "Stochastic Gradient Descent"
+literal "false"
+
+\end_inset
+
+), often referred to as online learning, is among the most commonly used
+ modifications 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "kiefer1952stochastic,robbins1951stochastic"
+literal "false"
+
+\end_inset
+
+.
+ Whereas batch gradient descent iterates through the whole training set,
+ SDG calculates the error and updates the weights after each training example.
+ This may lead to faster convergence and and is less prone to get stuck
+ in local minima since the frequent updates come with increased noise.
+ Downsides are higher computational cost and and a noisy gradient signal.
+ Mini batch gradient descent tries to find the middle way by updating the
+ weights after certain number of training examples 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "bottou2010large,lecun1998efficient"
+literal "false"
+
+\end_inset
+
+.
+ Depending on the batch size the optimizer behaves either way, so performance
+ may vary depending on the problem and dataset.
+\end_layout
+
+\begin_layout Standard
+In order to break the symmetry and avoid identical weight updates, the weights
+ are randomly initialized.
+ Esepcially when using sigmoid activation functions, the initial weights
+ should be neither to small nor to large to avoid small gradients
+\begin_inset CommandInset citation
+LatexCommand citep
+key "lecun1998efficient"
+literal "false"
+
+\end_inset
+
+.
+ In practice, a standard normal initialization should work fine.
+ Algorithm 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Gradient Descent"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ describes the algorithm of updating the weights of the neural network.
+ For a batch size equal to one (
+\begin_inset Formula $B=1)$
+\end_inset
+
+ the algorithm performs SGD and for a batch size equal to the training set
+ (
+\begin_inset Formula $B=I$
+\end_inset
+
+) you have batch gradient descent.
+ The number epochs is a hyper parameter that specifies how often the the
+ procedure is repeated.
+ As dataset and model increase in size or the learning rate is decreased,
+ the number of epochs ususally needs to be increased in order to find an
+ optimium.
+ The reader may refer to 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "bengio2012practical"
+literal "false"
+
+\end_inset
+
+, who provides a practical outline about tuning the batch size and other
+ hyper parameters.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Formula $B=$
+\end_inset
+
+ batch size
+\end_layout
+
+\begin_layout Plain Layout
+Randomly initialize all 
+\begin_inset Formula $w_{n,j}^{[L-k]}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+for number of epochs do:
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+for 
+\begin_inset Formula $i,...B$
+\end_inset
+
+ do
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+calculate 
+\begin_inset Formula $J$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+for 
+\begin_inset Formula $k=L-1,....0$
+\end_inset
+
+ do:
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+Calculate 
+\begin_inset Formula $\frac{dJ}{dw_{n,j}^{[L-k]}}$
+\end_inset
+
+, for all 
+\begin_inset Formula $n,j$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $w_{n,j}^{[L-k]}:=w_{n,j}^{[L-k]}+\alpha\frac{dJ}{dw_{n,j}^{[L-k]}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad\qquad\qquad$
+\end_inset
+
+
+\begin_inset Formula $b_{n,j}^{[L-k]}:=b_{n}^{[L-k]}+\alpha\frac{dJ}{db_{n}^{[L-k]}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+end for
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+end for
+\end_layout
+
+\begin_layout Plain Layout
+end for
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Gradient Descent
+\begin_inset CommandInset label
+LatexCommand label
+name "Gradient Descent"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Whereas the batch size affects only the outer loop, there exist also numerous
+ approaches that target the inner workings of the algorithm.
+ Gradient descent with momentum 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "qian1999momentum"
+literal "false"
+
+\end_inset
+
+ uses an exponetially weighted average of the gradients to update the weights.
+ This almost always leads to faster convergence.
+ RMSprop 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "tieleman2012lecture"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "RMSprop"
+description "Root Mean Squared Prop"
+literal "false"
+
+\end_inset
+
+ is another technique that scales the gradients such that the weight updates
+ are increased towards convergence and decrease oscillation.
+ The ADAM Optimizer 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "kingma2014adam"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "ADAM"
+description "Adaptive Moment Estimation"
+literal "false"
+
+\end_inset
+
+ combines momentum and RMSprop and and combines the advantages of both approache
+s.
+ It will be used to train LSTM networks for this work as well.
+ For further optimization techniques regarding neural networks, the reader
+ may refer to 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ruder2016overview"
+literal "false"
+
+\end_inset
+
+ for an overview.
+\end_layout
+
+\begin_layout Subsection
+Recurrent Neural Networks
+\end_layout
+
+\begin_layout Standard
+FNNs are well suited for fitting a mapping from an input vector to an output
+ label but when it comes to time series however, they lack the ability to
+ model dependencies through time.
+ Recurrent neural networks address this issue by feeding the output of the
+ nodes back into the network and consequently processing past input vectors
+ with subsequent ones.
+ The first versions of Recurrent Neural Networks
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "RNN"
+description "Recurrent Neural Network"
+literal "false"
+
+\end_inset
+
+were developed by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "hopfield1982neural"
+literal "false"
+
+\end_inset
+
+.
+ They exhibit an architecture that feeds the output of every node to the
+ other nodes of the same layer.
+ Later 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "elman1990finding,jordan1986attractor"
+literal "false"
+
+\end_inset
+
+ developed that idea further and introduced returning connections to the
+ node itself as well as connections to nodes in other layers in the network.
+ In some cases, the output values would pass through another layer of nodes
+ before beeing fed in again.
+ Through this artificial lag, this architecture is well suited for learning
+ sequence data and predicting time series.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/RNN.png
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Backpropagation through time
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Backpropagation-through-time"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to derive the weight updates for gradient descent, the derivatives
+ are calculated with backpropagation through time 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "werbos1990backpropagation"
+literal "false"
+
+\end_inset
+
+.
+ For this approach, the network is 'unfolded' in a sense that it is copied
+ multiple times while passing activation values to its successor (see Figure
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Backpropagation-through-time"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ Training deep recurrent networks often leads to the vanishing gradient
+ problem since the partial derivatives tend to get very small when multiplying
+ many subsequent derivatives during backpropagation (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dJ/dz(L-k)"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+,
+\begin_inset CommandInset citation
+LatexCommand citealt
+key "bengio1994learning"
+literal "false"
+
+\end_inset
+
+).
+ For that reason, linear activation functions such as ReLU became increasly
+ popular since their constant derivatives circumvent the vanishing gradient
+ problem and allow training much deeper networks at an increased convergence
+ speed 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "glorot2011deep,krizhevsky2012imagenet"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+LSTM and Echo State networks are both concepts that build on top of recurrent
+ neural networks.
+ LSTM replace the activation function with memory cells and ESNs use a diffrent
+ approach for training.
+ This will be elaborated in more detail in the following sections.
+\end_layout
+
+\begin_layout Subsection
+Echo State Networks
+\end_layout
+
+\begin_layout Standard
+Echo state networks 
+\begin_inset CommandInset citation
+LatexCommand citep
+before "ESN,"
+key "jaeger2001echo"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "ESN"
+description "Echo State Network"
+literal "false"
+
+\end_inset
+
+ and liquid state machines 
+\begin_inset CommandInset citation
+LatexCommand citep
+before "LSM,"
+key "maass2002real"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "LSM"
+description "Liquid State Maschine"
+literal "false"
+
+\end_inset
+
+ are a sub category of reservoir computing.
+ An ESN has many similarities to an RNN though the weights of the hidden
+ layers are not subject to training.
+ This creates a reservoir that acts as a complex nonlinear dynamic filter
+ which is capable of transforming the input signals with a high dimensional
+ temporal mapping.
+ As a consequence, the training process is simplified to a linear regression
+ problem yet the ability to fit a mapping function of higher dimensions
+ remains.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "schiller2003weight"
+literal "false"
+
+\end_inset
+
+ show that the resulting network structure of an RNN, which is trained with
+ the Atiya-Parlos Recurrent Learning agorithm 
+\begin_inset CommandInset citation
+LatexCommand citep
+before "APRL,"
+key "atiya2000new"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "APRL"
+description "Atiya-Parlos Recurrent Learning"
+literal "false"
+
+\end_inset
+
+ is very similar to a dynamic reservoir with a linear output layer.
+ They further conclude that the initialization procedure has a significant
+ impact on the error and convergence to the smallest error ist not guaranteed.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/ESN.png
+	scale 40
+	rotateOrigin centerTop
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Echo State Network
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Echo-State-Network"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Non Formal training procedure
+\end_layout
+
+\begin_layout Standard
+The follwing section will introduce an ESN with 
+\begin_inset Formula $N$
+\end_inset
+
+ reservoir Units, 
+\begin_inset Formula $K$
+\end_inset
+
+ input units and 
+\begin_inset Formula $L$
+\end_inset
+
+ output units simlar to 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "jaeger2001echo"
+literal "false"
+
+\end_inset
+
+.
+ The reservoir state 
+\begin_inset Formula $x(n)\in\mathbb{R}^{N}$
+\end_inset
+
+ is calculated as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+x(n+1)=f(Wx(n)+W^{in}u(n+1)+W^{back}y(n))\label{eq:ESN reservoir state}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $W\in\mathbb{R}^{N\times N}$
+\end_inset
+
+ is the reservoir weight matrix, 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $W^{in}\in\mathbb{R}^{N\times K}$
+\end_inset
+
+ denotes the weight matrix for input 
+\begin_inset Formula $u(n)\in\mathbb{R}^{K}$
+\end_inset
+
+ and 
+\begin_inset Formula $W^{back}\in\mathbb{R}^{N\times L}$
+\end_inset
+
+ is the optional weight matrix for output signal 
+\begin_inset Formula $y(n)\in\mathbb{R}^{L}$
+\end_inset
+
+ that goes back into the reservoir.
+ The function 
+\begin_inset Formula $f$
+\end_inset
+
+ is the element wise activation function typically is either an identity,
+ sigmoid or tanh function.
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+The subsequent element of a time series is computed by the weighted actiavtion
+ of the concatenation of the input, reservoir state, and previous output
+ activation vectors.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+y(n+1)=f^{out}(W^{out}(\underset{z(n+1)}{\underbrace{u(n+1),x(n+1),y(n)}}))\label{eq: ESN subsequent element}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to fit output weight matrix 
+\begin_inset Formula $W^{out}\in\mathbb{R}^{L\times(K+N+L)}$
+\end_inset
+
+, the sequence of input features 
+\begin_inset Formula $u_{train}(n),...u_{train}(n_{max})$
+\end_inset
+
+ is passed in the network.
+ This leads to a sequence of system states 
+\begin_inset Formula $z(n),....z(n_{max})$
+\end_inset
+
+ that is stored in the state collection matrix 
+\begin_inset Formula $S\in\mathbb{R}^{n_{max}\times(K+N+L)}$
+\end_inset
+
+.
+ In case 
+\begin_inset Formula $W^{back}$
+\end_inset
+
+ is nonzero, the respective training labels are written in the output nodes
+ to calculate the reservoir state 
+\begin_inset Formula $x(n)$
+\end_inset
+
+.
+ This process is called teacher forcing (Source!).
+ The respective output values of the training set are stored in an output
+ collection matrix 
+\begin_inset Formula $D\in\mathbb{R}^{n_{max}\times L}$
+\end_inset
+
+.
+ The output weight matrix can then be found by transposing the product of
+ the pseudoinverse of 
+\begin_inset Formula $S$
+\end_inset
+
+ with 
+\begin_inset Formula $D$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+W^{out}=(S^{\dagger}D)^{T}\label{eq: ESN Output Weights}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Echo State Property
+\end_layout
+
+\begin_layout Standard
+Grigoryeva time delay reservoir
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citep
+key "schrauwen2007overview"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Long Short Term Memory Neural Networks
+\end_layout
+
+\begin_layout Standard
+(ref: coley blog)
+\end_layout
+
+\begin_layout Standard
+Long Short Term Memory Neural Networks (LSTM)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "LSTM"
+description "Long Short Term Memory Neural Network"
+literal "false"
+
+\end_inset
+
+ belong to the family of RNNs as well where the activation functions are
+ replaced by gated recurrent units (GRU)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "GRU"
+description "Gated Recurrent Unit"
+literal "false"
+
+\end_inset
+
+.
+ By using a system of gate functions and a cell state, 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "hochreiter1997long"
+literal "false"
+
+\end_inset
+
+ could successfully create models that exhibit long term memory abilities.
+ That way, LSTMs can effectively address the vanishing gradient problem
+ and learn dependencies in time series that lie further apart in time.
+ The core structure is similar to that of RNNs as shown in Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Backpropagation-through-time"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ just expanded by a cell state 
+\begin_inset Formula $C_{t}$
+\end_inset
+
+ that is computed and altered in paralell and passed on to the subsequent
+ cell (see Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Echo-State-Network"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+) The following notation and figure design follow 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "olah2015understanding"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/LSTM.png
+	scale 40
+	rotateOrigin centerTop
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Long Short Term Memory Cell 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:LSTM"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In a fist step the forget gate 
+\begin_inset Formula $f_{t}$
+\end_inset
+
+ takes input data 
+\begin_inset Formula $x_{t}$
+\end_inset
+
+ and preceeding cell output 
+\begin_inset Formula $h_{t-1}$
+\end_inset
+
+ and applies a signmoid actiavtion function.
+ The output is a number between zero and one for every number in the cell
+ state 
+\begin_inset Formula $C_{t-1}$
+\end_inset
+
+ which are then multiplied.
+ Consequently values close to zero erase information from previous cell
+ states whereas numbers close to one preserve it.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+f_{t}=\sigma(W_{f}*[h_{t-1},x_{t}]+b_{f})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In a next step, the values for the new cell state 
+\begin_inset Formula $\widetilde{C}_{t}$
+\end_inset
+
+ are determined by a 
+\begin_inset Formula $tanh$
+\end_inset
+
+ layer and then an input gate 
+\begin_inset Formula $i_{t}$
+\end_inset
+
+ determines which values of 
+\begin_inset Formula $C_{t}$
+\end_inset
+
+ get updated by multiplying.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+i_{t} & =\sigma(W_{i}[h_{t-1},x_{t}]+b_{i})\\
+\widetilde{C}_{t} & =tanh(W_{C}[h_{t-1},x_{t}]+b_{C})
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The new cell state is finally determined by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+C_{t}=f_{t}*C_{t-1}+i_{i}*\widetilde{C}_{t}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to derive the cell output, the updated cell state is then used
+ to alter the result of the output gate 
+\begin_inset Formula $o_{t}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+o_{t} & =\sigma(W_{o}[h_{t-1},x_{t}]+b_{o})\\
+h_{t} & =o_{t}*tanh(C_{t})
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The cell state 
+\begin_inset Formula $C_{t}$
+\end_inset
+
+ and cell output 
+\begin_inset Formula $h_{t}$
+\end_inset
+
+ are then passed on the next LSTM Cell.
+\end_layout
+
+\begin_layout Section
+Literature Review
+\end_layout
+
+\begin_layout Subsubsection*
+Feedforward Neural Networks
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citet
+key "bartlmae2000measuring"
+literal "false"
+
+\end_inset
+
+ successfully apply a FNN for risk management and forecasting daily volatilities.
+ They are able to demonstrate a that FNNs underestimate risk less often
+ than GARCH
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "GARCH"
+description "Generalized AutoRegressive Conditional Heteroscedasticity"
+literal "false"
+
+\end_inset
+
+ models.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "anders1998improving"
+literal "false"
+
+\end_inset
+
+ as well as 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "meissner2001capturing"
+literal "false"
+
+\end_inset
+
+ find that especially the MLP delivers a significantly better option pricing
+ performance that the well known model by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "black1973pricing"
+literal "false"
+
+\end_inset
+
+ when using i.a.
+ GARCH volatility forecasts as inputs.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "yu2006currency"
+literal "false"
+
+\end_inset
+
+ use general regression neural networks (GRNN)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "GRNN"
+description "General Regression Neural Network"
+literal "false"
+
+\end_inset
+
+ to forecast shocks in the south east asian economies.
+ By framing the experiment as a classification problem, they find that GRNNs
+ improve forecasts of regressions techniques such as logit and probit models.
+ A recent study by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "arneric2018neural"
+literal "false"
+
+\end_inset
+
+ finds that a hybrid approach using a FNN heterogeneous autoregressive (HAR)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "HAR"
+description "Heterogeneous AutoRegressive"
+literal "false"
+
+\end_inset
+
+ model to forecast realized variance yield better in sample results but
+ does not improve out of sample accuracy.
+ Using hybrid ANN architectures for volatility forecasting has proven to
+ be useful in other studies as well 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "kristjanpoller2018hybrid,sallehuddin2009hybrid"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+One major shortfall of FNNs, however, is the fact that they map input data
+ directly to the output labels when learning.
+ That makes it challenging to learn patterns in the context of time series
+ since FNNs do not exhibit any memory state and consider every training
+ example in an isolated way.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+Recurrent Neural Networks
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citet
+key "tino2001financial"
+literal "false"
+
+\end_inset
+
+ use an Elman RNN with one hidden layer for volatility trading.
+ They notice that their RNN behaves like a limited memory source and hardly
+ beats classical fixed order Markov models.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "dunis2002forecasting"
+literal "false"
+
+\end_inset
+
+, however, use an slightly different architecture that loops back from the
+ output instead of the hidden layer.
+ They find that a FX option straddle trading strategy based on their RNN
+ forecast for historical volatility is able to beat the GARCH benchmark
+ in the out-of-sample period.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "bekiros2008direction"
+literal "false"
+
+\end_inset
+
+ use a volatility based RNN to predict direction of change in the market.
+ They find that this approach can especially improve trading performance
+ during bear markets.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "vejendla2013evaluation"
+literal "false"
+
+\end_inset
+
+ find that RNNs exhibit a lower mean squared error when predicting historical
+ volatility than FNNs do.
+ Other approaches use hybrid models or sentiment analysis of news data in
+ order to predict the volatility of stocks 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "liu2017stock"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+When it comes to time series, it is very challenging for RNNs to to learn
+ long term dependencies when being trained with gradient descent 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "bengio1994learning"
+literal "false"
+
+\end_inset
+
+.
+ The reason for that is that during back propagation the multiplication
+ of the Jacobian matrices leads to vanishing or exploding gradients which
+ results in unreasonable weight updates 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "pascanu2013difficulty"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+Echo State Networks
+\end_layout
+
+\begin_layout Standard
+Even though ESNs have some very feasible properties for time series forecasting,
+ their application in finance is still in the early stage.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "lin2009short"
+literal "false"
+
+\end_inset
+
+, however, find that ESNs outperform conventional ANN architectures when
+ it comes to short term stock price predictions.
+ Their benchmark includes a FNN, an Elman RNN and an ANN with radial basis
+ functions as activation function.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "grigoryeva2014stochastic"
+literal "false"
+
+\end_inset
+
+ assess the performance of ESN when forecasting conditional realized variances.
+ They find that especially parallel configurations with multiple parallel
+ reservoirs exhibit good forecasting results for realized volatility.
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Subsubsection*
+Long Short Term Memory Neural Networks
+\end_layout
+
+\begin_layout Standard
+(...) 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "yu2018forecasting"
+literal "false"
+
+\end_inset
+
+ find that a LSTM exhibit lower error measures than GARCH models when forecastin
+g volatility.
+ Especially long term dependencies are better captures by the LSTM model.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "kim2018forecasting"
+literal "false"
+
+\end_inset
+
+ develop hybrid LSTM networks that use multiple (E)GARCH models as input
+ for forecasting volatility of the KOSPI 200 Index.
+ They find that especially hybrid architectures can improve forecasts significan
+tly.
+\end_layout
+
+\begin_layout Section
+Methodology
+\end_layout
+
+\begin_layout Subsection
+Data
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Charts/DowJonesRV.png
+	scale 40
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Dow Jones Realized Variance
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+Univariate Case
+\end_layout
+
+\begin_layout Standard
+For the univariate case, the dataset contains five univariate time series
+ of daily realized variance observations for the Dow Jones Industrials (USA),
+ FTSE 100 (GB), DAX (Germany), Nikkei 225 (JP) and the USD/ EUR Spot.
+ The Data is provided by the Oxford Man Institute's realized library 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "heber2009oxford"
+literal "false"
+
+\end_inset
+
+ and covers the period from January 1996 until March 2009 which results
+ in up to 3'933 observations per underlying.
+ 
+\begin_inset Note Note
+status open
+
+\begin_layout Plain Layout
+Describe events in that time frame, insert picture
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Since realized variance is always positive, its
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Charts/DowJonesRVAC.png
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Dow Jones AC
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+test test
+\end_layout
+
+\begin_layout Standard
+test test
+\end_layout
+
+\begin_layout Subsection
+Model Set Up and Benchmarks
+\end_layout
+
+\begin_layout Subsection
+Implementation
+\end_layout
+
+\begin_layout Section
+Empirical Results
+\end_layout
+
+\begin_layout Section
+Conclusion
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset nomencl_print
+LatexCommand printnomenclature
+set_width "auto"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+btprint "btPrintCited"
+bibfiles "refs"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

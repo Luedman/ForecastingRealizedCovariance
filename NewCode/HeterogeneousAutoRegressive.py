@@ -1,5 +1,6 @@
 import statsmodels.api as sm
 import numpy as np
+import dataUtils
 
 class HARmodel:
 
@@ -8,7 +9,7 @@ class HARmodel:
         self.fitted = False
         self.modelType = "HAR"
 
-    def fit(self, dataHAR, silent = False):
+    def fit(self, dataHAR, silent = True):
 
         modelSetUp = sm.OLS(dataHAR['Y'], sm.add_constant(dataHAR[['X1', 'X5', 'X22']]))
         self.model = modelSetUp.fit()
@@ -30,9 +31,23 @@ class HARmodel:
 
         return estimate
 
-    def multiStepAheadForecast(self, data, forecastHorizon, startIndex):
+    def multiStepAheadForecast(self, data, forecastHorizon, startIndex, 
+                                            windowMode = "Expanding", 
+                                            windowSize = 400):
 
         assert startIndex - 22 > 0
+        assert windowMode.upper() in ["EXPANDING", "ROLLING", "FIXED"], "Window Mode not recognized"
+
+        if windowMode.upper() == "EXPANDING":
+            newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
+            newdataHAR = dataUtils.convertHAR(newxTrain[:])
+            self.fit(newdataHAR, silent = True)
+        elif windowMode.upper() == "ROLLING":
+            newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
+            newdataHAR = dataUtils.convertHAR(newxTrain[-windowSize:])
+            self.fit(newdataHAR, silent = True)
+        else: pass
+
 
         historicDataVector = data.xTest[startIndex - 22: startIndex]
 

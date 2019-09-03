@@ -17,6 +17,17 @@ class Data:
         self.yTest = yTest
         self.scaler = scaler
 
+class ErrorMetrics:
+
+    def __init__(self, vectorRMSE, errorMatrixRMSE, vectorQLIK, errorMatrixQLIK):
+
+        self.vectorRMSE = vectorRMSE
+        self.errorMatrixRMSE = errorMatrixRMSE
+        self.vectorQLIK = vectorQLIK
+        self.errorMatrixQLIK = errorMatrixQLIK
+
+
+
 def dataPrecprocessingUnivariate(path, fileName):
 
     rawData = pd.read_csv(path + fileName, skiprows = 1, sep="\,", engine='python')
@@ -123,14 +134,15 @@ def convertHAR(xVector):
 
 def calculateRSMEVector(data, model, forecastHorizon, silent = True):
 
-    errorMatrix = []
+    errorMatrixRMSE = []
+    errorMatrixQLIK = []
 
     for startIndex in range(23, data.xTest.shape[0] - forecastHorizon):
         
         if silent is False and startIndex % 25 == 0: print("Evaluation is at index: " + str(startIndex) + "/ " \
             + str(data.xTest.shape[0] - forecastHorizon))
         
-        forecast = model.multiStepAheadForecast(data, forecastHorizon, startIndex)
+        forecast = model.multiStepAheadForecast(data, forecastHorizon, startIndex, windowMode = "Expanding")
 
         if model.modelType == "HAR" or model.modelType == "ESN":
             actual = data.yTest[startIndex : startIndex + forecastHorizon]
@@ -145,12 +157,15 @@ def calculateRSMEVector(data, model, forecastHorizon, silent = True):
         assert actual.shape == forecast.shape, "actual " + str(actual.shape) +  \
             " and forecast shape " + str(forecast.shape) + " do not match"
         
-        squaredErrorVector = np.power(np.exp(forecast) - np.exp(actual),2)
-        errorMatrix.append(squaredErrorVector)
+        errorVectorRMSE = np.power(np.exp(forecast) - np.exp(actual),2)
+        errorMatrixRMSE.append(errorVectorRMSE)
+        vectorRSME = np.sqrt(np.average(errorMatrixRMSE, axis = 0))
 
-        RSMEVectorPerTimeStep = np.sqrt(np.average(errorMatrix, axis = 0))
+        errorVectorQLIK = np.log(np.exp(actual) / np.exp(forecast)) + np.exp(actual) / np.exp(forecast)
+        errorMatrixQLIK.append(errorVectorQLIK)
+        vectorQLIK = np.average(errorMatrixQLIK, axis = 0)
 
-        def showForecast():
+        def showForecast(avgErrorVector, errorMatrix):
             # Debug Function
             ax1 = plt.subplot(3, 1, 1)
             ax1.set_title("Actual vs Forecast")
@@ -162,19 +177,17 @@ def calculateRSMEVector(data, model, forecastHorizon, silent = True):
             for i in range(0,len(errorMatrix)):
                 shade = str(i/(len(errorMatrix)+0.1))
                 ax2.plot(np.sqrt(errorMatrix[i]), color=shade, linestyle='dotted')
-            ax2.plot(RSMEVectorPerTimeStep, color='blue', marker ="x" )
+            ax2.plot(avgErrorVector, color='blue', marker ="x" )
             ax2.set_title("Error Vectors.")
 
             ax3 = plt.subplot(3, 1, 3)
             ax3.set_title("Error Vector Avg. Index: " +  str(startIndex))
-            ax3.plot(RSMEVectorPerTimeStep, color='blue', marker ="x" )
+            ax3.plot(avgErrorVector, color='blue', marker ="x" )
 
             plt.tight_layout()
             plt.show()
         
-        debug = 0
-
-    return RSMEVectorPerTimeStep 
+    return ErrorMetrics(vectorRSME, errorMatrixRMSE, vectorQLIK, errorMatrixQLIK) 
 
 
 

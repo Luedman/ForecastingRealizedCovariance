@@ -46,7 +46,13 @@ class LSTMmodel:
             inputDimension = 3
 
         LSTMmodelStructure = Sequential()
-        LSTMmodelStructure.add(LSTM(self.architecture[0], 
+
+        # tbd
+        # TODO: Implement bidirectional attention
+        def VanillaLSTM(layer):
+            return layer
+
+        LSTMmodelStructure.add(LSTM(self.architecture[1], 
                                 activation='relu',
                                 return_sequences = True, 
                                 input_shape = (self.lookBack, inputDimension),
@@ -55,15 +61,21 @@ class LSTMmodel:
                                 bias_initializer='ones',
                                 recurrent_regularizer = self.regularization))
         
-        for i in range(len(self.architecture) - 1):
+        for i in range(1,len(self.architecture) - 1):
             LSTMmodelStructure.add(LSTM(self.architecture[i + 1], return_sequences = True, \
                 dropout = self.dropout,
                 kernel_initializer='random_uniform', 
                 bias_initializer='ones',
                 recurrent_regularizer = self.regularization))
-        
-        LSTMmodelStructure.add(LSTM(self.architecture [-1]))
-        LSTMmodelStructure.add(Dense(self.forecastHorizon, activation='softmax'))
+
+        # The last layer does not return_sequences
+        LSTMmodelStructure.add(LSTM(self.architecture [-1]), return_sequences = False
+                dropout = self.dropout,
+                kernel_initializer='random_uniform', 
+                bias_initializer='ones',
+                recurrent_regularizer = self.regularization))
+
+        LSTMmodelStructure.add(Dense(self.forecastHorizon, activation='sigmoid'))
         
         self.model = LSTMmodelStructure
 
@@ -71,19 +83,24 @@ class LSTMmodel:
                         xTestLSTM, yTestLSTM, modelname = "LSTM", 
                         learningRate = 0.00001, batchSize = 256):
 
+        # ADAM with gradient clipping and learning rate decay
         self.model.compile(loss = 'mse', optimizer = Adam(lr=learningRate, clipvalue = 0.5, decay=1e-12))
-    
+
+        # Tensorbaord Log
         tensorboard = TensorBoard(log_dir='./Log' + modelname, 
                                 histogram_freq = 0, 
                                 write_graph = False, 
                                 write_images = True)
         
+        # Log to Terminal
         outputLog = outputLogCallback()
 
+        # Early Stopping
         overfitCallback = EarlyStopping(monitor = 'val_loss', 
-                                        min_delta = 0.00001, 
+                                        min_delta = 0.0001, 
                                         patience = 50)
         
+        # Train Model
         self.model.fit(xTrainLSTM, yTrainLSTM, 
                             epochs = epochs, 
                             batch_size = batchSize, 
@@ -98,6 +115,9 @@ class LSTMmodel:
         print("Model Saved")
 
     def multiStepAheadForecast(self, xTestLSTM, forecastHorizon, startIndex):
+        
+        # If output shape is equal to one, perform recursive forecasting, otherwise do 
+        # direct sequence to sequence forecasting
 
         assert forecastHorizon == self.forecastHorizon or self.forecastHorizon == 1, \
             "Model has diffrent forecast Horizon"

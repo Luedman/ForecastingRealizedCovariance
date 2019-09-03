@@ -1,3 +1,4 @@
+# Python Packages
 import numpy as np
 import pandas as pd
 import scipy as sc
@@ -9,12 +10,27 @@ from datetime import datetime
 from copy import copy
 from json import dumps
 
+from os import getpid, system
+import subprocess
+
 from sklearn.metrics import mean_squared_error
+from scipy.stats import ttest_ind
+
+# Project Scripts
 import dataUtils
 import HeterogeneousAutoRegressive
 
 np.random.seed(1)
 counter = 0
+
+cpuLimit = 150
+if cpuLimit > 0:
+    try:
+        limitCommand = "cpulimit --pid " + str(getpid()) + " --limit " + str(cpuLimit)
+        subprocess.Popen(limitCommand, shell=True)
+        print("CPU Limit at " + str(cpuLimit))
+    except:
+        print("Limiting CPU Usage failed")
 
 class ESNmodel:
 
@@ -40,7 +56,6 @@ class ESNmodel:
 
         self.networkTrained     = False
         self.reservoirMatrix    = None
-        self.networkTrained     = False
 
         # Set optional Parameters
         if ('internalNodes' in hyperparameterESN):
@@ -238,7 +253,7 @@ class ESNmodel:
             plt.show()
 
         return rmse, yHat
-    
+    '''
     def oneStepAheadForecast(self, xTest, yTest):
 
         assert self.networkTrained == True, "Network isn't trained yet"
@@ -263,11 +278,12 @@ class ESNmodel:
         oneStepAheadForecast = np.average(forecasts)
 
         return oneStepAheadForecast
-
+    '''
     def multiStepAheadForecast(self, data, noStepsAhead, startIndex, windowMode = "Expanding", windowSize = 400):
         
         noSamples = 1
         assert self.networkTrained == True, "ESN is not trained of failed in the Process"
+        assert windowMode.upper() in ["EXPANDING", "ROLLING", "FIXED"], "Window Mode not recognized"
 
         if windowMode.upper() == "EXPANDING":
             newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
@@ -277,9 +293,7 @@ class ESNmodel:
             newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
             newyTrain = np.concatenate([data.yTrain, data.yTest[:startIndex]])
             self.fit(newxTrain[-windowSize:], newyTrain[-windowSize:], 100)
-        elif windowMode.upper() == "FIXED":
-            pass
-        else: print("Window Mode not recognized")
+        else: pass
 
         randomStartIndices = np.random.randint(0, self.modelResidualMatrix.shape[0] + 1 - noStepsAhead, size = noSamples)
         randomResidualsMatrix = np.array([self.modelResidualMatrix[randomIndex:randomIndex + noStepsAhead,:] for randomIndex in randomStartIndices])
@@ -339,18 +353,21 @@ def searchOptimalParamters():
     path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/Preprocessing/"
     fileName    = "realized.library.0.1.csv"
     asset       = "DJI"
+    daysAhead = 10
 
+    testSetPartition = 250
     data = dataUtils.loadScaleDataUnivariate(asset, path, fileName, scaleData = True)
+    data.xTest = data.xTest[:testSetPartition]
+    data.yTest = data.yTest[:testSetPartition]
 
-    internalNodesRange  = [50,100,200,400]
+    internalNodesRange  = [100]
     shiftRange          = [0]
     scalingRange        = [1]
-    specRadRange        = [0.05, 0.1, 0.15]
+    specRadRange        = [0.05, 0.1,0.2,0.4,0.6, 0.8]
     #list(np.round(np.linspace(0.1,1.1,num = 20),4))
-    regLambdaRange      = [1e-7 ,1e-8, 1e-9]
-    connectivityRange   = [0.2, 0.1, 0.05, 0.025]
-    leakingRate         = [0]
-    #list(np.round(np.linspace(0.0,1.0,num = 4),2))
+    regLambdaRange      = [0.01, 0.001,1e-4, 1e-6 ,1e-8, 1e-10]
+    connectivityRange   = [0.1]
+    leakingRate         = [0, 0.1]
     seed                = [1]
 
     hyperParameterSpace = list(cartProduct(internalNodesRange, 
@@ -364,7 +381,8 @@ def searchOptimalParamters():
 
     totalIterations = len(hyperParameterSpace)
     interationNo = 0
-    minRMSE = float('inf')
+    avgErrorMinRMSE = float('inf')
+    avgErrorMinQLIK = float('inf')
 
     for parameterSet in hyperParameterSpace:
 
@@ -377,78 +395,112 @@ def searchOptimalParamters():
                             'leakingRate':       parameterSet[6],
                             'seed':              parameterSet[7]}
         
-        testEsn = ESNmodel(1,1,hyperparameterESN)
-        
+        testEsn = ESNmodel(1,1,hyperparameterESN)      
         testEsn.fit(data.xTrain, data.yTrain, 100)
-        #rsmeTestRun, _ = testEsn.evaluate(xTest, yTest, scaler)
-        rsmeTestRun = np.average(dataUtils.calculateRSMEVector(data, testEsn, 15, silent = False))
 
-        if rsmeTestRun < minRMSE:
-            minRMSE = rsmeTestRun
-            optimalParameters = hyperparameterESN
+        errorsESN = dataUtils.calculateRSMEVector(data, testEsn, daysAhead, silent = True)
+        weights = np.array(range(daysAhead, 0, -1)).reshape(-1,1)
+
+        avgRMSE = np.average(errorsESN.vectorRMSE)
+        if avgRMSE < avgErrorMinRMSE:
+            avgErrorMinRMSE = avgRMSE
+            optimalParametersRMSE = hyperparameterESN
+
+        avgQLIK = np.average(errorsESN.vectorQLIK)
+        if  avgQLIK < avgErrorMinQLIK:
+            avgErrorMinQLIK = avgQLIK
+            optimalParametersQLIK = hyperparameterESN
         
         interationNo += 1
         print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-        print(interationNo, " / ", totalIterations, " MinRSME: ", minRMSE, " RSME: ", rsmeTestRun)
+        print(interationNo, " / ", totalIterations, "RMSE: " + str(avgRMSE) + "  QLIK: " + str(avgQLIK))
+        print("Min RMSE: " + str(avgErrorMinRMSE) + "  Min QLIK: " + str(avgErrorMinQLIK))
         print(hyperparameterESN)
     
-    print(optimalParameters)
-    return optimalParameters
+    print("Hyperparameter Search Finished: ")
+    print("Optimal Paramenters RMSE: ")
+    print(optimalParametersRMSE)
+    print("Optimal Paramenters QLIK: ")
+    print(optimalParametersQLIK)
+    return
 
 def evaluateESN():
     print("Evaluate ESN")
 
-    # USER INPUT Specifiy Data Path
+    # USER INPUT
     path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/Preprocessing/"
     fileName    = "realized.library.0.1.csv"
     asset       = "DJI"
+    daysAhead = 30
 
+    testSetPartition = 250
     data = dataUtils.loadScaleDataUnivariate(asset, path, fileName)
-    
+    data.xTest = data.xTrain
+    data.yTest = data.yTrain
+    data.xTest = data.xTest[:testSetPartition]
+    data.yTest = data.yTest[:testSetPartition]
+
+
     hyperparameterESN = {'internalNodes': 100, 
                             'inputScaling': 1, 
                             'inputShift': 0, 
                             'spectralRadius': 0.05, 
-                            'regressionLambda': 1e-09, 
-                            'connectivity': 0.025, 
-                            'leakingRate': 0, 
+                            'regressionLambda': 0.01, 
+                            'connectivity': 0.1, 
+                            'leakingRate': 0.1, 
                             'seed': 1}
+    '''
+    Search Results: 
+    Optimal Paramenters RMSE: 
+    {'internalNodes': 50, 'inputScaling': 1, 'inputShift': 0, 'spectralRadius': 0.1, 'regressionLambda': 1e-10, 'connectivity': 0.05, 'leakingRate': 0, 'seed': 1}
+    Optimal Paramenters QLIK: 
+    {'internalNodes': 50, 'inputScaling': 1, 'inputShift': 0, 'spectralRadius': 0.05, 'regressionLambda': 1e-08, 'connectivity': 0.0, 'leakingRate': 0, 'seed': 1}
+    Optimal Paramenters RMSE: 
+    {'internalNodes': 100, 'inputScaling': 1, 'inputShift': 0, 'spectralRadius': 0.8, 'regressionLambda': 1e-06, 'connectivity': 0.1, 'leakingRate': 0.1, 'seed': 1}
+    Optimal Paramenters QLIK: 
+    {'internalNodes': 100, 'inputScaling': 1, 'inputShift': 0, 'spectralRadius': 0.05, 'regressionLambda': 0.01, 'connectivity': 0.1, 'leakingRate': 0.1, 'seed': 1}
+    '''
 
     testEsn = ESNmodel(1,1,hyperparameterESN)
-
     testEsn.fit(data.xTrain, data.yTrain, 100)
 
     dataHAR = dataUtils.convertHAR(data.xTrain)
     HAR = HeterogeneousAutoRegressive.HARmodel()
-    HAR.fit(dataHAR, silent=True)
-
-    #rsmeTestRun, _ = testEsn.evaluate(data)
-    #print("RSEM Test Run: " + str(rsmeTestRun))
+    HAR.fit(dataHAR)
     
-    cut = 250
-    data.xTest = data.xTest[:cut]
-    data.yTest = data.yTest[:cut]
+    errorsESN = dataUtils.calculateRSMEVector(data, testEsn, daysAhead, silent = False)
+    errorsHAR = dataUtils.calculateRSMEVector(data, HAR, daysAhead, silent = True)
+    
+    def plotErrorVectors(title, erroVectorESN, errorMatrixESN, 
+                            erroVectorHAR, errorMatrixHAR, alpha = 0.25):
 
-    esnRSME = dataUtils.calculateRSMEVector(data, testEsn, 30, silent = False)
+        tTestResult = ttest_ind(errorMatrixESN, errorMatrixHAR)
+        significantPoints = list(np.where(tTestResult[1]<alpha)[0])
 
-    harRSME = dataUtils.calculateRSMEVector(data, HAR, 30, silent = True)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(erroVectorESN, label = "ESN", color = 'red', marker = '*', markevery = significantPoints)
+        ax.plot(erroVectorHAR ,label = "HAR", color = 'blue')
+        ax.set_title(title + ' ' + str(daysAhead) +' Days Forecasting Error - ' + str(data.xTest.shape[0]))
+        ax.text(0.95, 0.01, dumps(hyperparameterESN,indent=2)[1:-1].replace('"',''),
+            verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
+            multialignment = "left")
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.plot(esnRSME, label = "ESN")
-    ax.plot(harRSME, label = "HAR")
-    ax.set_title('Echo State HAR RSME Forecasting Error')
-    ax.text(0.95, 0.01, dumps(hyperparameterESN,indent=2),
-        verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
-        multialignment = "left")
-
-    plt.legend()
-    plt.show()
+        plt.legend()
+        plt.show()
+    
+    plotErrorVectors("RMSE", errorsESN.vectorRMSE, errorsESN.errorMatrixRMSE, 
+                            errorsHAR.vectorRMSE, errorsHAR.errorMatrixRMSE)
+    
+    plotErrorVectors("QLIK", errorsESN.vectorQLIK, errorsESN.errorMatrixQLIK, 
+                            errorsHAR.vectorQLIK, errorsHAR.errorMatrixQLIK)
+    
+    print("Evaluation Finished")
 
     
 
 if __name__ == "__main__":
-    #searchOptimalParamters()
-    evaluateESN()
+    searchOptimalParamters()
+    #evaluateESN()
 
     

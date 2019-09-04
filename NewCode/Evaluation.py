@@ -64,7 +64,7 @@ def evaluate():
         ax.plot(errorsESN.vectorRSME, label = "ESN", color = 'red', marker = '*', markevery = significantPoints)
         ax.plot(errorsLSTM.vectorRSME, label = "LSTM", color = 'red', marker = '*', markevery = significantPoints)
         ax.plot(errorsHAR.vectorRSME ,label = "HAR", color = 'blue')
-        ax.set_title(title + ' ' + str(daysAhead) +' Days Forecasting Error - ' + str(data.xTest.shape[0]))
+        ax.set_title('RMSE ' + str(daysAhead) +' Days Forecasting Error - ' + str(data.xTest.shape[0]))
         ax.text(0.95, 0.01, dumps(hyperparameterESN,indent=2)[1:-1].replace('"',''),
             verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
             multialignment = "left")

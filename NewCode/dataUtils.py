@@ -127,17 +127,22 @@ def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = N
 
     totalIterations = data.xTest.shape[0] - forecastHorizon + 1
     assert totalIterations > 25, "Increase Test Size of the Test Set"
-    errorMatrixRMSE = []
-    errorMatrixQLIK = []
-    errorMatrixL1Norm = []
+    
+    errorMatrices = {"RMSE": [],
+                        "QLIK": [],
+                        "L1Norm": []}
 
-    for startIndex in range(25, totalIterations):
+    avgErrorVectors = {"RMSE": None,
+                        "QLIK": None,
+                        "L1Norm": None}
 
-        if silent is False and (startIndex % 25 == 0 or startIndex == totalIterations - 1): 
-            print(model.modelType + " Evaluation is at index: " + str(startIndex) + "/ " \
-            + str(totalIterations - 1))
-        
-        forecast = model.multiStepAheadForecast(data, forecastHorizon, startIndex, windowMode, windowSize)
+    def modelForecast(startIndex):
+
+        forecast = model.multiStepAheadForecast(data, 
+                                                forecastHorizon, 
+                                                startIndex, 
+                                                windowMode, 
+                                                windowSize)
 
         if model.modelType == "HAR" or model.modelType == "ESN":
             actual = data.yTest[startIndex : startIndex + forecastHorizon]
@@ -155,17 +160,37 @@ def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = N
         assert actual.shape == forecast.shape, "actual " + str(actual.shape) +  \
             " and forecast shape " + str(forecast.shape) + " do not match"
         
-        errorVectorRMSE = np.power(np.exp(forecast) - np.exp(actual),2)
-        errorMatrixRMSE.append(errorVectorRMSE)
-        vectorRMSE = np.sqrt(np.average(errorMatrixRMSE, axis = 0))
-    
-        errorVectorQLIK = np.log(np.exp(actual) / np.exp(forecast)) + np.exp(actual) / np.exp(forecast)
-        errorMatrixQLIK.append(errorVectorQLIK)
-        vectorQLIK = np.average(errorMatrixQLIK, axis = 0)
+        return actual, forecast
 
-        errorVectorL1Norm = np.linalg.norm((forecast - actual), axis = 1)
-        errorMatrixL1Norm.append(errorVectorL1Norm)
-        vectorL1Norm = np.average(errorMatrixL1Norm, axis = 0)
+    #hasattr(myObj, '__iter__')
+
+    for startIndex in range(25, totalIterations):
+
+        if silent is False and (startIndex % 25 == 0 or startIndex == totalIterations - 1): 
+            print(model.modelType + " Evaluation is at index: " + str(startIndex) + "/ " \
+            + str(totalIterations - 1))
+        
+        actual, forecast = modelForecast(startIndex)
+        
+        def calculateForecastingError(errorType):
+
+            if errorType == "RMSE":
+                errorVector = np.power(np.exp(forecast) - np.exp(actual),2)
+            elif errorType == "QLIK":
+                errorVector = np.log(np.exp(actual) / np.exp(forecast)) + np.exp(actual) / np.exp(forecast)
+            elif errorType == "L1Norm":
+                errorVector =np.linalg.norm((forecast - actual), axis = 1)
+            
+            errorMatrices[errorType].append(errorVector)
+
+            if errorType == "RMSE":
+                avgErrorVectors[errorType] = np.sqrt(np.average(errorMatrices[errorType], axis = 0))
+            elif errorType in ["QLIK", "L1Norm"]:
+                avgErrorVectors[errorType] = np.average(errorMatrices[errorType], axis = 0)
+                
+        calculateForecastingError("RMSE")
+        calculateForecastingError("QLIK")
+        calculateForecastingError("L1Norm")
 
         def showForecast(avgErrorVector, errorMatrix):
             # Debug Function
@@ -189,15 +214,6 @@ def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = N
             plt.tight_layout()
             plt.show()
     
-    avgErrorVectors =   {"RMSE" : vectorRMSE,
-                         "QLIK" : vectorQLIK,
-                         "L1Norm": vectorL1Norm}
-
-    errorMatrices =     {"RMSE" : errorMatrixRMSE,
-                         "QLIK" : errorMatrixQLIK,
-                         "L1Norm": errorMatrixL1Norm}
-
-
     return ErrorMetrics(avgErrorVectors, errorMatrices)
 
 def limitCPU(cpuLimit):

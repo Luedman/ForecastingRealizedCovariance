@@ -5,6 +5,9 @@ from inspect import stack
 from sklearn.preprocessing import MinMaxScaler
 from matplotlib import pyplot as plt
 
+import time
+import sys
+
 np.random.seed(1)
 
 class Data:
@@ -16,17 +19,39 @@ class Data:
         self.xTest = xTest
         self.yTest = yTest
         self.scaler = scaler
+    
+    def __convertDataLSTM(self, xVector, lookBack, forecastHorizon):
+
+        dataX, dataY = np.empty([1,lookBack]), np.empty([1,forecastHorizon])
+
+        for i in range(lookBack, len(xVector) - 1 - forecastHorizon):
+
+            x_lookback = xVector[i - lookBack:i].T
+            dataX = np.concatenate((dataX, x_lookback), axis = 0)
+
+            y_multistepForecast = xVector[i: i + forecastHorizon].T
+            dataY = np.concatenate((dataY, y_multistepForecast), axis = 0)
+
+            assert np.sum(np.subtract(np.concatenate((x_lookback.T,y_multistepForecast.T)), \
+                    xVector[i - lookBack:i + forecastHorizon])) == 0
+
+        dataX = dataX.reshape((dataX.shape[0], dataX.shape[1],1))[1:]
+        dataY = dataY.reshape((dataY.shape[0], dataY.shape[1]))[1:]
+
+        return dataX, dataY
+
+    def createLSTMDataSet(self,lookBack, forecastHorizon):
+
+        self.xTrainLSTM, self.yTrainLSTM = self.__convertDataLSTM(self.xTrain, lookBack, forecastHorizon)
+        self.xTestLSTM, self.yTestLSTM = self.__convertDataLSTM(self.xTest, lookBack, forecastHorizon)
+
 
 class ErrorMetrics:
 
-    def __init__(self, vectorRMSE, errorMatrixRMSE, vectorQLIK, errorMatrixQLIK):
+    def __init__(self, errorVectors, errorMatrices):
 
-        self.vectorRMSE = vectorRMSE
-        self.errorMatrixRMSE = errorMatrixRMSE
-        self.vectorQLIK = vectorQLIK
-        self.errorMatrixQLIK = errorMatrixQLIK
-
-
+        self.errorVector = errorVectors
+        self.errorMatrix = errorMatrices
 
 def dataPrecprocessingUnivariate(path, fileName):
 
@@ -80,40 +105,6 @@ def loadScaleDataUnivariate(asset, path, fileName, scaleData = True):
 
     return Data(xTrain, yTrain, xTest, yTest, scaler)
 
-def convertDataLSTM(xVector, lookBack, forecastHorizon):
-
-    dataX, dataY = np.empty([1,lookBack]), np.empty([1,forecastHorizon])
-
-    for i in range(lookBack, len(xVector) - 1 - forecastHorizon):
-
-        x_lookback = xVector[i - lookBack:i].T
-        dataX = np.concatenate((dataX, x_lookback), axis = 0)
-
-        y_multistepForecast = xVector[i: i + forecastHorizon].T
-        dataY = np.concatenate((dataY, y_multistepForecast), axis = 0)
-
-        assert np.sum(np.subtract(np.concatenate((x_lookback.T,y_multistepForecast.T)), \
-                   xVector[i - lookBack:i + forecastHorizon])) == 0
-
-    dataX = dataX.reshape((dataX.shape[0], dataX.shape[1],1))[1:]
-    dataY = dataY.reshape((dataY.shape[0], dataY.shape[1]))[1:]
-
-    return dataX, dataY
-
-def convertDataHybridLSTM(xVector, dataHAR, lookBack, forecastHorizonModel):
-
-    xLSTM, _ = convertDataLSTM(xVector, lookBack, forecastHorizonModel)
-
-    xLSTMw, _ = convertDataLSTM(np.expand_dims(dataHAR["X5"].values, axis = 1), 
-                                                   lookBack, forecastHorizonModel)
-
-    xLSTMm, _ = convertDataLSTM(np.expand_dims(dataHAR["X22"].values, axis = 1), 
-                                                   lookBack, forecastHorizonModel)
-    
-    xLSTMResult = np.concatenate([xLSTM[23:], xLSTMw, xLSTMm], axis = 2)
-
-    return xLSTMResult
-
          
 def convertHAR(xVector):
 
@@ -132,23 +123,30 @@ def convertHAR(xVector):
 
     return dataHAR
 
-def calculateRSMEVector(data, model, forecastHorizon, silent = True):
+def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = None, silent = True):
 
+    totalIterations = data.xTest.shape[0] - forecastHorizon + 1
+    assert totalIterations > 25, "Increase Test Size of the Test Set"
     errorMatrixRMSE = []
     errorMatrixQLIK = []
+    errorMatrixL1Norm = []
 
-    for startIndex in range(23, data.xTest.shape[0] - forecastHorizon):
+    for startIndex in range(25, totalIterations):
+
+        if silent is False and (startIndex % 25 == 0 or startIndex == totalIterations - 1): 
+            print(model.modelType + " Evaluation is at index: " + str(startIndex) + "/ " \
+            + str(totalIterations - 1))
         
-        if silent is False and startIndex % 25 == 0: print("Evaluation is at index: " + str(startIndex) + "/ " \
-            + str(data.xTest.shape[0] - forecastHorizon))
-        
-        forecast = model.multiStepAheadForecast(data, forecastHorizon, startIndex, windowMode = "Expanding")
+        forecast = model.multiStepAheadForecast(data, forecastHorizon, startIndex, windowMode, windowSize)
 
         if model.modelType == "HAR" or model.modelType == "ESN":
             actual = data.yTest[startIndex : startIndex + forecastHorizon]
 
         if model.modelType == "LSTM":
-            actual = data.yTest[startIndex:startIndex + 1].reshape(-1, 1).T
+            if data.yTest[startIndex:startIndex + 1].shape == (1,1):
+                actual = data.yTest[startIndex:startIndex + forecastHorizon].reshape(1, -1).T
+            else: 
+                actual = data.yTest[startIndex:startIndex + 1].reshape(1, -1).T
 
         if data.scaler is not None:
             forecast = data.scaler.inverse_transform(forecast)
@@ -159,17 +157,21 @@ def calculateRSMEVector(data, model, forecastHorizon, silent = True):
         
         errorVectorRMSE = np.power(np.exp(forecast) - np.exp(actual),2)
         errorMatrixRMSE.append(errorVectorRMSE)
-        vectorRSME = np.sqrt(np.average(errorMatrixRMSE, axis = 0))
-
+        vectorRMSE = np.sqrt(np.average(errorMatrixRMSE, axis = 0))
+    
         errorVectorQLIK = np.log(np.exp(actual) / np.exp(forecast)) + np.exp(actual) / np.exp(forecast)
         errorMatrixQLIK.append(errorVectorQLIK)
         vectorQLIK = np.average(errorMatrixQLIK, axis = 0)
+
+        errorVectorL1Norm = np.linalg.norm((forecast - actual), axis = 1)
+        errorMatrixL1Norm.append(errorVectorL1Norm)
+        vectorL1Norm = np.average(errorMatrixL1Norm, axis = 0)
 
         def showForecast(avgErrorVector, errorMatrix):
             # Debug Function
             ax1 = plt.subplot(3, 1, 1)
             ax1.set_title("Actual vs Forecast")
-            ax1.plot(np.exp(forecast), label = "ESN")
+            ax1.plot(np.exp(forecast), label = "Forecast")
             ax1.plot(np.exp(actual), label = "Actual")
             ax1.legend()
 
@@ -186,10 +188,29 @@ def calculateRSMEVector(data, model, forecastHorizon, silent = True):
 
             plt.tight_layout()
             plt.show()
-        
-    return ErrorMetrics(vectorRSME, errorMatrixRMSE, vectorQLIK, errorMatrixQLIK) 
+    
+    avgErrorVectors =   {"RMSE" : vectorRMSE,
+                         "QLIK" : vectorQLIK,
+                         "L1Norm": vectorL1Norm}
+
+    errorMatrices =     {"RMSE" : errorMatrixRMSE,
+                         "QLIK" : errorMatrixQLIK,
+                         "L1Norm": errorMatrixL1Norm}
 
 
+    return ErrorMetrics(avgErrorVectors, errorMatrices)
+
+def limitCPU(cpuLimit):
+    from os import getpid
+    import subprocess
+
+    if cpuLimit > 0:
+        try:
+            limitCommand = "cpulimit --pid " + str(getpid()) + " --limit " + str(cpuLimit)
+            subprocess.Popen(limitCommand, shell=True)
+            print("CPU Limit at " + str(cpuLimit))
+        except:
+            print("Limiting CPU Usage failed")
 
 
 

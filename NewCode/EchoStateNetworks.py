@@ -9,12 +9,11 @@ from itertools import product as cartProduct
 from datetime import datetime
 from copy import copy
 from json import dumps
-
-from os import getpid, system
-import subprocess
+from bayes_opt import BayesianOptimization
 
 from sklearn.metrics import mean_squared_error
 from scipy.stats import ttest_ind
+import warnings
 
 # Project Scripts
 import dataUtils
@@ -23,14 +22,7 @@ import HeterogeneousAutoRegressive
 np.random.seed(1)
 counter = 0
 
-cpuLimit = 150
-if cpuLimit > 0:
-    try:
-        limitCommand = "cpulimit --pid " + str(getpid()) + " --limit " + str(cpuLimit)
-        subprocess.Popen(limitCommand, shell=True)
-        print("CPU Limit at " + str(cpuLimit))
-    except:
-        print("Limiting CPU Usage failed")
+
 
 class ESNmodel:
 
@@ -288,11 +280,11 @@ class ESNmodel:
         if windowMode.upper() == "EXPANDING":
             newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
             newyTrain = np.concatenate([data.yTrain, data.yTest[:startIndex]])
-            self.fit(newxTrain[:], newyTrain[:], 100)
+            self.fit(newxTrain[:], newyTrain[:], 50)
         elif windowMode.upper() == "ROLLING":
             newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
             newyTrain = np.concatenate([data.yTrain, data.yTest[:startIndex]])
-            self.fit(newxTrain[-windowSize:], newyTrain[-windowSize:], 100)
+            self.fit(newxTrain[-windowSize:], newyTrain[-windowSize:], 50)
         else: pass
 
         randomStartIndices = np.random.randint(0, self.modelResidualMatrix.shape[0] + 1 - noStepsAhead, size = noSamples)
@@ -310,8 +302,8 @@ class ESNmodel:
             for residualVector in randomResidualsMatrix:
 
                 reservoirState = self.__reservoirState(forecastVector[i-1], prevReservoirState)
-                #residualVector[i]
-
+                # + residualVector[i]
+                
                 oneStepForecast = self.__outputActivationFunction(np.matmul(self.reservoirReadout, prevReservoirState))
                 oneStepForecast = (oneStepForecast - self.inputShift)/self.inputScaling
 
@@ -341,12 +333,14 @@ class ESNmodel:
 
         return forecastVector
 
+def hedgeAlgorithm():
+    pass
+
 
 def searchOptimalParamters():
     print("Hyperparameter Search")
 
     # Disable Warnings (especially overflow)
-    import warnings
     warnings.filterwarnings("ignore")
 
     # USER INPUT Specifiy Data Path
@@ -354,6 +348,9 @@ def searchOptimalParamters():
     fileName    = "realized.library.0.1.csv"
     asset       = "DJI"
     daysAhead = 10
+
+    windowMode = "Expanding"
+    windowSize = 0
 
     testSetPartition = 250
     data = dataUtils.loadScaleDataUnivariate(asset, path, fileName, scaleData = True)
@@ -364,7 +361,6 @@ def searchOptimalParamters():
     shiftRange          = [0]
     scalingRange        = [1]
     specRadRange        = [0.05, 0.1,0.2,0.4,0.6, 0.8]
-    #list(np.round(np.linspace(0.1,1.1,num = 20),4))
     regLambdaRange      = [0.01, 0.001,1e-4, 1e-6 ,1e-8, 1e-10]
     connectivityRange   = [0.1]
     leakingRate         = [0, 0.1]
@@ -398,15 +394,18 @@ def searchOptimalParamters():
         testEsn = ESNmodel(1,1,hyperparameterESN)      
         testEsn.fit(data.xTrain, data.yTrain, 100)
 
-        errorsESN = dataUtils.calculateRSMEVector(data, testEsn, daysAhead, silent = True)
-        weights = np.array(range(daysAhead, 0, -1)).reshape(-1,1)
+        evaulationESN = dataUtils.calculateRSMEVector(data, testEsn, daysAhead, 
+                                                windowMode = windowMode,
+                                                windowSize = windowSize,
+                                                silent = False)                                     
+        #weights = np.array(range(daysAhead, 0, -1)).reshape(-1,1)
 
-        avgRMSE = np.average(errorsESN.vectorRMSE)
+        avgRMSE = np.average(evaulationESN.errorVector["RMSE"])
         if avgRMSE < avgErrorMinRMSE:
             avgErrorMinRMSE = avgRMSE
             optimalParametersRMSE = hyperparameterESN
 
-        avgQLIK = np.average(errorsESN.vectorQLIK)
+        avgQLIK = np.average(evaulationESN.errorVector["QLIK"])
         if  avgQLIK < avgErrorMinQLIK:
             avgErrorMinQLIK = avgQLIK
             optimalParametersQLIK = hyperparameterESN
@@ -424,8 +423,12 @@ def searchOptimalParamters():
     print(optimalParametersQLIK)
     return
 
-def evaluateESN():
-    print("Evaluate ESN")
+
+def baysianOptimization():
+    print("Baysian Optimization")
+
+    # Disable Warnings (especially overflow)
+    warnings.filterwarnings("ignore")
 
     # USER INPUT
     path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/Preprocessing/"
@@ -435,72 +438,54 @@ def evaluateESN():
 
     testSetPartition = 250
     data = dataUtils.loadScaleDataUnivariate(asset, path, fileName)
-    data.xTest = data.xTrain
-    data.yTest = data.yTrain
     data.xTest = data.xTest[:testSetPartition]
     data.yTest = data.yTest[:testSetPartition]
 
+    def esnEvaluation( spectralRadius,
+                            regressionLambda, 
+                            connectivity, 
+                            leakingRate):
+        
+        hyperparameterESN = {'internalNodes': 400, 
+                                'inputScaling': 1, 
+                                'inputShift': 0, 
+                                'spectralRadius': spectralRadius, 
+                                'regressionLambda': regressionLambda, 
+                                'connectivity': connectivity, 
+                                'leakingRate': leakingRate, 
+                                'seed': 1}
 
-    hyperparameterESN = {'internalNodes': 100, 
-                            'inputScaling': 1, 
-                            'inputShift': 0, 
-                            'spectralRadius': 0.05, 
-                            'regressionLambda': 0.01, 
-                            'connectivity': 0.1, 
-                            'leakingRate': 0.1, 
-                            'seed': 1}
-    '''
-    Search Results: 
-    Optimal Paramenters RMSE: 
-    {'internalNodes': 50, 'inputScaling': 1, 'inputShift': 0, 'spectralRadius': 0.1, 'regressionLambda': 1e-10, 'connectivity': 0.05, 'leakingRate': 0, 'seed': 1}
-    Optimal Paramenters QLIK: 
-    {'internalNodes': 50, 'inputScaling': 1, 'inputShift': 0, 'spectralRadius': 0.05, 'regressionLambda': 1e-08, 'connectivity': 0.0, 'leakingRate': 0, 'seed': 1}
-    Optimal Paramenters RMSE: 
-    {'internalNodes': 100, 'inputScaling': 1, 'inputShift': 0, 'spectralRadius': 0.8, 'regressionLambda': 1e-06, 'connectivity': 0.1, 'leakingRate': 0.1, 'seed': 1}
-    Optimal Paramenters QLIK: 
-    {'internalNodes': 100, 'inputScaling': 1, 'inputShift': 0, 'spectralRadius': 0.05, 'regressionLambda': 0.01, 'connectivity': 0.1, 'leakingRate': 0.1, 'seed': 1}
-    '''
+        ESN = ESNmodel(1,1,hyperparameterESN)
+        ESN.fit(data.xTrain, data.yTrain, nForgetPoints = 50)
 
-    testEsn = ESNmodel(1,1,hyperparameterESN)
-    testEsn.fit(data.xTrain, data.yTrain, 100)
+        evaluationESN = dataUtils.calculateRSMEVector(data, ESN, daysAhead, 
+                                                    silent = True, 
+                                                    windowMode = "Rolling",
+                                                    windowSize = 400)
 
-    dataHAR = dataUtils.convertHAR(data.xTrain)
-    HAR = HeterogeneousAutoRegressive.HARmodel()
-    HAR.fit(dataHAR)
-    
-    errorsESN = dataUtils.calculateRSMEVector(data, testEsn, daysAhead, silent = False)
-    errorsHAR = dataUtils.calculateRSMEVector(data, HAR, daysAhead, silent = True)
-    
-    def plotErrorVectors(title, erroVectorESN, errorMatrixESN, 
-                            erroVectorHAR, errorMatrixHAR, alpha = 0.25):
+        return np.average(evaluationESN.errorVector["RMSE"])*-1
 
-        tTestResult = ttest_ind(errorMatrixESN, errorMatrixHAR)
-        significantPoints = list(np.where(tTestResult[1]<alpha)[0])
+    pbounds = { 'spectralRadius':   (0.1, 1),
+                'regressionLambda': (0, 0.1),
+                'connectivity':     (0.01, 0.05),
+                'leakingRate' :     (0,1)}
 
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.plot(erroVectorESN, label = "ESN", color = 'red', marker = '*', markevery = significantPoints)
-        ax.plot(erroVectorHAR ,label = "HAR", color = 'blue')
-        ax.set_title(title + ' ' + str(daysAhead) +' Days Forecasting Error - ' + str(data.xTest.shape[0]))
-        ax.text(0.95, 0.01, dumps(hyperparameterESN,indent=2)[1:-1].replace('"',''),
-            verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
-            multialignment = "left")
+    dataUtils.limitCPU(100)
+    optimizer = BayesianOptimization(f=esnEvaluation,
+                                        pbounds=pbounds,
+                                        random_state=1)
 
-        plt.legend()
-        plt.show()
-    
-    plotErrorVectors("RMSE", errorsESN.vectorRMSE, errorsESN.errorMatrixRMSE, 
-                            errorsHAR.vectorRMSE, errorsHAR.errorMatrixRMSE)
-    
-    plotErrorVectors("QLIK", errorsESN.vectorQLIK, errorsESN.errorMatrixQLIK, 
-                            errorsHAR.vectorQLIK, errorsHAR.errorMatrixQLIK)
-    
-    print("Evaluation Finished")
+    optimizer.maximize(init_points=2, n_iter=100)
+    print(optimizer.max)
+
+    # {'target': -5.107364346276386e-05, 'params': {'connectivity': 0.25, 'leakingRate': 0.3045764247831867, 'regressionLambda': 0.03349326637933621, 'spectralRadius': 0.28370282580070894}}
+    # 200 {'target': -5.817736792645783e-05, 'params': {'connectivity': 0.39209320009591453, 'leakingRate': 0.027453634574218677, 'regressionLambda': 0.018121378307801052, 'spectralRadius': 0.11798213612570352}}
 
     
-
 if __name__ == "__main__":
-    searchOptimalParamters()
+    pass
+    #baysianOptimization()
+    #searchOptimalParamters()
     #evaluateESN()
 
     

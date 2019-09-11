@@ -10,6 +10,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 from json import dumps
 
+
+
+import warnings
+warnings.filterwarnings("ignore")
+
+
 def evaluate():
 
     # USER INPUT
@@ -22,23 +28,25 @@ def evaluate():
     data = dataUtils.loadScaleDataUnivariate(asset, path, fileName)
     data.xTest = data.xTest[:testSetPartition]
     data.yTest = data.yTest[:testSetPartition]
+    #data.xTest = data.xTrain
+    #data.yTest = data.yTrain
 
     # Echo State Network
-    hyperparameterESN = {'internalNodes': 100, 
+    hyperparameterESN = {'internalNodes': 50, 
                             'inputScaling': 1, 
                             'inputShift': 0, 
-                            'spectralRadius': 0.8, 
+                            'spectralRadius': 0.7, 
                             'regressionLambda': 0.01, 
-                            'connectivity': 0.1, 
-                            'leakingRate': 0.1, 
-                            'seed': 1}
+                            'connectivity': 0.2, 
+                            'leakingRate': 0.0, 
+                            'seed': 2}
 
     ESN = EchoStateNetworks.ESNmodel(1,1,hyperparameterESN)
-    ESN.fit(data.xTrain, data.yTrain, nForgetPoints = 100)
+    ESN.fit(data.xTrain, data.yTrain, nForgetPoints = 50)
 
     # LSTM Model
-    LSTM = LongShortTermMemoryNetworks.LSTMmodel(loadPath = "./LSTMmodels/32-16-8-1-Model.h5")
-    data.createLSTMDataSet(LSTM.forecastHorizon,LSTM.lookBack)
+    LSTM = LongShortTermMemoryNetworks.LSTMmodel(loadPath = "./LSTMmodels/32-Model.h5")
+    data.createLSTMDataSet(LSTM.lookBack, LSTM.forecastHorizon)
 
     # Benchmark HAR Model
     dataHAR = dataUtils.convertHAR(data.xTrain)
@@ -46,25 +54,38 @@ def evaluate():
     HAR.fit(dataHAR)
 
     # Evaluate Models
-    errorsESN = dataUtils.calculateRSMEVector(data, ESN, daysAhead, silent = False)
-    errorsHAR = dataUtils.calculateRSMEVector(data, HAR, daysAhead, silent = True)
-    errorsLSTM = dataUtils.calculateRSMEVector(data, LSTM, daysAhead, silent = False)
+    windowMode = "Expanding"
+    windowSize = 30
+
+    dataUtils.limitCPU(200)
+    evaulationESN = dataUtils.calculateRSMEVector(data, ESN, daysAhead, 
+                                                windowMode = windowMode,
+                                                windowSize = windowSize,
+                                                silent = False)
+    evaluationLSTM = dataUtils.calculateRSMEVector(data, LSTM, daysAhead,  
+                                                windowMode = "Rolling",
+                                                windowSize = windowSize,
+                                                silent = False)
+    evaluationHAR = dataUtils.calculateRSMEVector(data, HAR, daysAhead,  
+                                                windowMode = windowMode,
+                                                windowSize = windowSize,
+                                                silent = False)
 
     # Plot Errors
-    def plotErrorVectors(errorsESN, errorsHAR,errorsLSTM, alpha = 0.25):
+    def plotErrorVectors(evaulationESN, evaluationHAR, evaluationLSTM, errorType, alpha = 0.25):
 
-        tTestResultESN = ttest_ind(errorsESN.errorMatrixRMSE, errorsHAR.errorMatrixRMSE)
-        significantPoints = list(np.where(tTestResultESN[1]<alpha)[0])
+        tTestResultESN = ttest_ind(evaulationESN.errorMatrix[errorType], evaluationHAR.errorMatrix[errorType])
+        significantPointsESN = list(np.where(tTestResultESN[1]<alpha)[0])
 
-        tTestResultLSTM = ttest_ind(errorsLSTM.errorMatrixRMSE, errorsHAR.errorMatrixRMSE)
-        significantPoints = list(np.where(tTestResultLSTM[1]<alpha)[0])
-
+        tTestResultLSTM = ttest_ind(evaluationLSTM.errorMatrix[errorType], evaluationHAR.errorMatrix[errorType])
+        significantPointsLSTM = list(np.where(tTestResultLSTM[1]<alpha)[0])
+            
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(errorsESN.vectorRSME, label = "ESN", color = 'red', marker = '*', markevery = significantPoints)
-        ax.plot(errorsLSTM.vectorRSME, label = "LSTM", color = 'red', marker = '*', markevery = significantPoints)
-        ax.plot(errorsHAR.vectorRSME ,label = "HAR", color = 'blue')
-        ax.set_title('RMSE ' + str(daysAhead) +' Days Forecasting Error - ' + str(data.xTest.shape[0]))
+        ax.plot(evaulationESN.errorVector[errorType], label = "ESN", color = 'red', marker = '*', markevery = significantPointsESN)
+        ax.plot(evaluationLSTM.errorVector[errorType], label = "LSTM", color = 'green', marker = '*', markevery = significantPointsLSTM)
+        ax.plot(evaluationHAR.errorVector[errorType] ,label = "HAR", color = 'blue')
+        ax.set_title(errorType + " " + str(daysAhead) +' Days Forecasting Error \n Test Set Size:' + str(data.xTest.shape[0])+ "  " + windowMode + " Window")
         ax.text(0.95, 0.01, dumps(hyperparameterESN,indent=2)[1:-1].replace('"',''),
             verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
             multialignment = "left")
@@ -72,7 +93,10 @@ def evaluate():
         plt.legend()
         plt.show()
     
-    plotErrorVectors(errorsESN, errorsHAR, errorsLSTM, alpha = 0.25)
-    
+    plotErrorVectors(evaulationESN, evaluationHAR, evaluationLSTM, errorType = "RMSE", alpha = 0.25)
+    plotErrorVectors(evaulationESN, evaluationHAR, evaluationLSTM, errorType = "QLIK", alpha = 0.25)
+    plotErrorVectors(evaulationESN, evaluationHAR, evaluationLSTM, errorType = "L1Norm", alpha = 0.25)
+
+
 if __name__ == "__main__":
     evaluate()

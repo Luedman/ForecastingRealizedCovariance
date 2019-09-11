@@ -32,8 +32,7 @@ class HARmodel:
         return estimate
 
     def multiStepAheadForecast(self, data, forecastHorizon, startIndex, 
-                                            windowMode = "Expanding", 
-                                            windowSize = 400):
+                                            windowMode, windowSize = 0):
 
         assert startIndex - 22 > 0
         assert windowMode.upper() in ["EXPANDING", "ROLLING", "FIXED"], "Window Mode not recognized"

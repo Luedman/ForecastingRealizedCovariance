@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd
 
-from inspect import stack
 from sklearn.preprocessing import MinMaxScaler
 from matplotlib import pyplot as plt
 
-import time
-import sys
-
-np.random.seed(1)
+from os import getpid
+from subprocess import Popen
+from multiprocessing import current_process
 
 class Data:
 
@@ -53,9 +51,10 @@ class ErrorMetrics:
         self.errorVector = errorVectors
         self.errorMatrix = errorMatrices
 
-def dataPrecprocessingUnivariate(path, fileName):
+def dataPrecprocessingUnivariate(path, fileName, rawData = None):
 
-    rawData = pd.read_csv(path + fileName, skiprows = 1, sep="\,", engine='python')
+    if rawData == None:
+        rawData = pd.read_csv(path + fileName, skiprows = 1, sep="\,", engine='python')
     rawData.columns = rawData.columns.str.replace('"','')
     rawData.head()
     rawData['Dates'] = pd.to_datetime(rawData['Dates'], format = '%Y%m%d').dt.date
@@ -77,7 +76,7 @@ def dataPrecprocessingUnivariate(path, fileName):
     return preprocessedData
 
 
-def loadScaleDataUnivariate(asset, path, fileName, scaleData = True):
+def loadScaleDataUnivariate(asset, path, fileName, scaleData = True, rawData = None):
 
     scaler = None
 
@@ -123,7 +122,13 @@ def convertHAR(xVector):
 
     return dataHAR
 
-def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = None, silent = True):
+def calculateErrorVectors(data, model, forecastHorizon, windowMode, windowSize = None, silent = True):
+    
+    # When using multiprocessing, limit CPU Usage depending of model Type
+    if current_process().name is not "MainProcess":
+        if model.modelType == "LSTM": limitCPU(200)
+        elif model.modelType == "ESN": limitCPU(200)
+        elif model.modelType == "HAR": limitCPU(20)
 
     totalIterations = data.xTest.shape[0] - forecastHorizon + 1
     assert totalIterations > 25, "Increase Test Size of the Test Set"
@@ -136,7 +141,8 @@ def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = N
                         "QLIK": None,
                         "L1Norm": None}
 
-    def modelForecast(startIndex):
+    # Get the forecast and the actual values 
+    def modelForecast(model, startIndex):
 
         forecast = model.multiStepAheadForecast(data, 
                                                 forecastHorizon, 
@@ -162,15 +168,14 @@ def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = N
         
         return actual, forecast
 
-    #hasattr(myObj, '__iter__')
-
+    # Iterate through the Test set and collect the errors
     for startIndex in range(25, totalIterations):
 
         if silent is False and (startIndex % 25 == 0 or startIndex == totalIterations - 1): 
             print(model.modelType + " Evaluation is at index: " + str(startIndex) + "/ " \
             + str(totalIterations - 1))
         
-        actual, forecast = modelForecast(startIndex)
+        actual, forecast = modelForecast(model, startIndex)
         
         def calculateForecastingError(errorType):
 
@@ -192,8 +197,9 @@ def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = N
         calculateForecastingError("QLIK")
         calculateForecastingError("L1Norm")
 
+        # Debug Function
         def showForecast(avgErrorVector, errorMatrix):
-            # Debug Function
+           
             ax1 = plt.subplot(3, 1, 1)
             ax1.set_title("Actual vs Forecast")
             ax1.plot(np.exp(forecast), label = "Forecast")
@@ -217,16 +223,13 @@ def calculateRSMEVector(data, model, forecastHorizon, windowMode, windowSize = N
     return ErrorMetrics(avgErrorVectors, errorMatrices)
 
 def limitCPU(cpuLimit):
-    from os import getpid
-    import subprocess
 
-    if cpuLimit > 0:
-        try:
-            limitCommand = "cpulimit --pid " + str(getpid()) + " --limit " + str(cpuLimit)
-            subprocess.Popen(limitCommand, shell=True)
-            print("CPU Limit at " + str(cpuLimit))
-        except:
-            print("Limiting CPU Usage failed")
+    try:
+        limitCommand = "cpulimit --pid " + str(getpid()) + " --limit " + str(cpuLimit)
+        Popen(limitCommand, shell=True)
+        print("CPU Limit at " + str(cpuLimit))
+    except:
+        print("Limiting CPU Usage failed")
 
 
 

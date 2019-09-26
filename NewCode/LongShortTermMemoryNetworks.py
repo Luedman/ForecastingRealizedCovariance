@@ -13,20 +13,19 @@ import dataUtils
 
 class LSTMmodel:
 
-    def __init__(self, forecastHorizon = 30, 
-                                lookBack = 32, 
-                                architecture = [32,32], 
+    def __init__(self, forecastHorizon = 30, lookBack = 32, 
+                                architecture = [32], 
                                 dropout = 0.0,
                                 regularization = 0.0,
                                 loadPath = None):
 
         np.random.seed(1)
-        self.modelType = "LSTM"
-        self.forecastHorizon = forecastHorizon
-        self.lookBack = lookBack
-        self.architecture = architecture
-        self.dropout = dropout
-        self.regularization = l1(regularization)
+        self.modelType          = "LSTM"
+        self.forecastHorizon    = forecastHorizon
+        self.lookBack           = lookBack
+        self.architecture       = architecture
+        self.dropout            = dropout
+        self.regularization     = l1(regularization)
 
         if loadPath is not None:
             self.model = load_model(loadPath)
@@ -40,19 +39,15 @@ class LSTMmodel:
             print("Model Loaded")
             #print(self.model.summary())
  
-    def createModel(self, hybridHAR = False):
+    def createModel(self):
 
         inputDimension = 1
-        if hybridHAR:
-            inputDimension = 3
-
         LSTMmodelStructure = Sequential()
-
-        #return_sequences = multiLayerNetwork, 
-        #input_shape = (self.lookBack, inputDimension),
 
         # tbd
         # TODO: Implement bidirectional attention
+        
+        # Define a standard LSTM layer with optinal arguments 
         def VanillaLSTM(nodes, **kwargs):
             return LSTM(nodes,  activation='relu',
                                 dropout = self.dropout,
@@ -61,20 +56,23 @@ class LSTMmodel:
                                 recurrent_regularizer = self.regularization,
                                 **kwargs)
 
+        # Add first layer
         LSTMmodelStructure.add(VanillaLSTM(self.architecture[0],
                                     return_sequences = (len(self.architecture) is not 1), 
                                     input_shape = (self.lookBack, inputDimension)))
-
+        
+        # Add optional subsequent layers
         if len(self.architecture) > 1:
         
             for i in range(1,len(self.architecture) - 1):
                 LSTMmodelStructure.add(VanillaLSTM(self.architecture[0],
                                     return_sequences = True))
 
-            # The last layer does not return_sequences
+            # Add the last LSTM Layer
             LSTMmodelStructure.add(VanillaLSTM(self.architecture[-1],
                                     return_sequences = False))
 
+        # Add a Dense Layer
         LSTMmodelStructure.add(Dense(self.forecastHorizon, activation='sigmoid'))
         
         self.model = LSTMmodelStructure

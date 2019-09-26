@@ -1,5 +1,5 @@
 ## Forecasting Realized Covariance Matrices with LSTM and Echo State Networks 
-Master Thesis (Work in Progress)
+Master Thesis
 Lukas Schreiner
 
 ### 1.1 Models Univariate Forecasting of Realized Variance

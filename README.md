@@ -6,17 +6,16 @@ Lukas Schreiner
 
 * LSTM
     - 32 LSTM Cells, 1 Layer
-    - Adam Optimizer with learning rate decay
-    - Gradient Clipping at 0.5
+    - Adam Optimizer with learning rate decay & gradient clipping
     - Dropout = 0.01
     - Regularization = 0.001
     - Activation Functions: Relu
     - 5000 training epochs with early stopping
 * Echo State Network
     - internalNodes : 100 
-    - spectralRadius': 0.17
-    - regressionLambda': 1.0
-    - connectivity': 0.011
+    - spectralRadius: 0.17
+    - regressionLambda: 1.0
+    - connectivity: 0.011
     - leakingRate': 0.08
 * Univariate HAR
 

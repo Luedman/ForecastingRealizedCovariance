@@ -1,11 +1,12 @@
-## Forecasting Realized Covariance Matrices with LSTM and Echo State Networks (Work in Progress)
-Master Thesis Lukas Schreiner
+## Forecasting Realized Covariance Matrices with LSTM and Echo State Networks 
+Master Thesis (Work in Progress)
+Lukas Schreiner
 
-### 1.1 Models Univariate 
+### 1.1 Models Univariate Forecasting of Realized Variance
 
 * LSTM
     - 32 LSTM Cells, 1 Layer
-    - Adam Optimizer
+    - Adam Optimizer with learning rate decay
     - Gradient Clipping at 0.5
     - Dropout = 0.01
     - Regularization = 0.001
@@ -18,6 +19,10 @@ Master Thesis Lukas Schreiner
     - connectivity': 0.011
     - leakingRate': 0.08
 * Univariate HAR
+
+### 1.2 Models Univariate Forecasting of Realized Variance
+
+tbd
 
 ### 2.1 Results Univariate 
 
@@ -36,6 +41,9 @@ Master Thesis Lukas Schreiner
   <img src='Pictures/Figure1c.png'>
 </div>
 
+### 2.2 Results Multivariate
+
+tbd
 
 ### 3. Data
 Oxford-Man Institute of Quantitative Finance

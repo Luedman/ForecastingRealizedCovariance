@@ -43,8 +43,8 @@ class ESNmodel:
         self.connectivity       = min([10/self.internalNodes, 1])
         self.inputMask          = np.ones([self.internalNodes, nInputNodes])
 
-        self.inputScaling       = np.ones((nInputNodes,1))
-        self.inputShift         = np.zeros((nInputNodes, 1))
+        self.inputScaling       = 1
+        self.inputShift         = 0
 
         self.networkTrained     = False
         self.reservoirMatrix    = None
@@ -85,11 +85,11 @@ class ESNmodel:
             hyperparameterESN.pop('inputMask')
 
         if ('inputScaling' in hyperparameterESN):
-            self.inputScaling = np.ones(self.nInputNodes) * hyperparameterESN['inputScaling']
+            self.inputScaling = hyperparameterESN['inputScaling']
             hyperparameterESN.pop('inputScaling')
 
         if ('inputShift' in hyperparameterESN):
-            self.inputShift = np.ones([self.nInputNodes, 1])* hyperparameterESN['inputShift']
+            self.inputShift = hyperparameterESN['inputShift']
             hyperparameterESN.pop('inputShift')
 
         # Check if all input arguments were used
@@ -147,15 +147,15 @@ class ESNmodel:
 
     def __reservoirState(self, prevOutput, prevReservoirState):
 
-        prevReservoirState = prevReservoirState.reshape(self.internalNodes, self.nInputNodes)
+        prevReservoirState = prevReservoirState.reshape(self.internalNodes, 1)
 
         activation = np.matmul(self.reservoirMatrix, prevReservoirState) + \
-            self.inputScaling * np.matmul(self.inputMask, prevOutput).reshape(self.internalNodes, self.nInputNodes) + self.inputShift
+            self.inputScaling * np.matmul(self.inputMask, prevOutput).reshape(self.internalNodes, 1) + self.inputShift
 
         reservoirStateResult = self.__activationFunction(activation,"Sigmoid")
         reservoirStateResult = - self.leakingRate * prevReservoirState + reservoirStateResult
 
-        assert reservoirStateResult.shape == (self.internalNodes, self.nInputNodes)
+        assert reservoirStateResult.shape == (self.internalNodes, 1)
 
         return reservoirStateResult
 
@@ -199,7 +199,7 @@ class ESNmodel:
         assert self.reservoirReadout.shape == (yTrain.shape[1], self.internalNodes)
 
         outputSequence = self.__outputActivationFunction(np.matmul(self.reservoirReadout, collectedStateMatrix)).T
-        outputSequence = (outputSequence - np.ones((outputSequence.shape))* self.inputShift) / self.inputScaling
+        outputSequence = (outputSequence - np.ones((outputSequence.shape)) * self.inputShift) / self.inputScaling
         
         def showOutputSequence(start = 0, end = -1):
             #Debug Function
@@ -246,32 +246,7 @@ class ESNmodel:
             plt.show()
 
         return rmse, yHat
-    '''
-    def oneStepAheadForecast(self, xTest, yTest):
 
-        assert self.networkTrained == True, "Network isn't trained yet"
-
-        noSamples = 20
-
-        collectedStateMatrix = self.__collectStateMatrix(xTest, 0)
-
-        randomIndices = np.random.randint(0,self.modelResidualMatrix.shape[0] + 1, size = noSamples)
-        randomResiduals = self.modelResidualMatrix[randomIndices]
-
-        startIndex = 3000
-
-        forecasts = []
-        
-        for residual in randomResiduals:
-
-            reservoirState = self.__reservoirState(xTest[startIndex] + residual, collectedStateMatrix[:,startIndex -1])
-
-            forecasts.append(self.__outputActivationFunction(np.matmul(self.reservoirReadout, reservoirState)).T)
-
-        oneStepAheadForecast = np.average(forecasts)
-
-        return oneStepAheadForecast
-    '''
     def multiStepAheadForecast(self, data, noStepsAhead, startIndex, 
                                     windowMode = "Expanding", windowSize = 400):
         
@@ -335,8 +310,6 @@ class ESNmodel:
 
         return forecastVector
 
-def hedgeAlgorithm():
-    pass
 
 
 def searchOptimalParamters():
@@ -346,16 +319,16 @@ def searchOptimalParamters():
     warnings.filterwarnings("ignore")
 
     # USER INPUT Specifiy Data Path
-    path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/Preprocessing/"
+    path        = "./Data/"
     fileName    = "realized.library.0.1.csv"
-    asset       = "DJI"
+    assetList   = ["DJI"]
     daysAhead = 10
 
     windowMode = "Expanding"
     windowSize = 0
 
     testSetPartition = 250
-    data = dataUtils.loadScaleDataUnivariate(asset, path, fileName, scaleData = True)
+    data = dataUtils.loadScaleData(assetList, path, fileName, scaleData = True)
     data.xTest = data.xTest[:testSetPartition]
     data.yTest = data.yTest[:testSetPartition]
 
@@ -423,6 +396,7 @@ def searchOptimalParamters():
     print(optimalParametersRMSE)
     print("Optimal Paramenters QLIK: ")
     print(optimalParametersQLIK)
+    
     return
 
 
@@ -433,13 +407,13 @@ def baysianOptimization():
     warnings.filterwarnings("ignore")
 
     # USER INPUT
-    path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/Preprocessing/"
+    path        = "./Data/"
     fileName    = "realized.library.0.1.csv"
-    asset       = "DJI"
+    assetList   = ["DJI"]
     daysAhead = 30
 
     testSetPartition = 250
-    data = dataUtils.loadScaleDataUnivariate(asset, path, fileName)
+    data = dataUtils.loadScaleData(assetList, path, fileName)
     data.xTest = data.xTest[:testSetPartition]
     data.yTest = data.yTest[:testSetPartition]
     #data.xTest = data.xTrain
@@ -465,7 +439,7 @@ def baysianOptimization():
         evaluationESN = dataUtils.calculateErrorVectors(data, ESN, daysAhead, 
                                                     silent = True, 
                                                     windowMode = "Fixed",
-                                                    windowSize = 400)
+                                                    windowSize = 0)
 
         return np.average(evaluationESN.errorVector["RMSE"])*-1
 
@@ -474,7 +448,7 @@ def baysianOptimization():
                 'connectivity':     (0.01, 0.1),
                 'leakingRate' :     (0,0.2)}
 
-    dataUtils.limitCPU(100)
+    #dataUtils.limitCPU(100)
     optimizer = BayesianOptimization(f=esnEvaluation,
                                         pbounds=pbounds,
                                         random_state=1)
@@ -485,7 +459,7 @@ def baysianOptimization():
     # {'target': -5.107364346276386e-05, 'params': {'connectivity': 0.25, 'leakingRate': 0.3045764247831867, 'regressionLambda': 0.03349326637933621, 'spectralRadius': 0.28370282580070894}}
     # 200 {'target': -5.817736792645783e-05, 'params': {'connectivity': 0.39209320009591453, 'leakingRate': 0.027453634574218677, 'regressionLambda': 0.018121378307801052, 'spectralRadius': 0.11798213612570352}}
     # 400 {'target': -5.766103436439476e-05, 'params': {'connectivity': 0.02351810808542145, 'leakingRate': 0.10729748881666834, 'regressionLambda': 0.05968872229967288, 'spectralRadius': 0.1932189099820555}}
-    
+    # 100 {'target': -5.342171818354836e-05, 'params': {'connectivity': 0.017684561647952367, 'leakingRate': 0.14181898970022982, 'regressionLambda': 1.0, 'spectralRadius': 0.11527163386472704}}
 if __name__ == "__main__":
     #pass
     baysianOptimization()

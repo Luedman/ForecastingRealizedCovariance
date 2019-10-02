@@ -13,31 +13,63 @@ from json import dumps
 import warnings
 warnings.filterwarnings("ignore")
 
+def evaluateMultivariate():
+    # ----------------------
+    path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/"
+    fileName    = "realized.library.0.1.csv"
+    assetList   = ['DJI', 'FTSE', 'GDAXI', 'N225', 'EUR']
+    noAssets    = len(assetList)
+    daysAhead   = 30
 
-def evaluate():
+    testSetPartition = 100
+    data = dataUtils.loadScaleData(assetList, path, fileName)
+    data.xTest = data.xTest[:testSetPartition]
+    data.yTest = data.yTest[:testSetPartition]
+    # ----------------------
+    hyperparameterESN = {'internalNodes': 200, 
+                            'inputScaling': 1, 
+                            'inputShift': 0, 
+                            'spectralRadius': 0.3, 
+                            'regressionLambda': 0.02, 
+                            'connectivity': 0.4, 
+                            'leakingRate': 0.03, 
+                            'seed': 1}
+
+    ESN = EchoStateNetworks.ESNmodel(noAssets,noAssets,hyperparameterESN)
+    ESN.fit(data.xTrain, data.yTrain, nForgetPoints = 50)
+
+    loadPath = "32-Model.h5"
+
+    LSTM = LongShortTermMemoryNetworks.LSTMmodel(loadPath = loadPath)
+    data.createLSTMDataSet(LSTM.lookBack, LSTM.forecastHorizon, noAssets)
+    print("Done")
+    # ----------------------
+
+
+def evaluateUnivariate():
 
     # USER INPUT
-    #path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/Preprocessing/"
-    path        = ""
+    path        = "./Data/"
     fileName    = "realized.library.0.1.csv"
-    asset       = "DJI"
+    assetList   = ["DJI"]
+    noAssets    = len(assetList)
     daysAhead = 30
 
     testSetPartition = 250
-    data = dataUtils.loadScaleDataUnivariate(asset, path, fileName)
+    data = dataUtils.loadScaleData(assetList, path, fileName)
     data.xTest = data.xTest[:testSetPartition]
     data.yTest = data.yTest[:testSetPartition]
     #data.xTest = data.xTrain
     #data.yTest = data.yTrain
 
     # Echo State Network
-    hyperparameterESN = {'internalNodes': 100, 
+    hyperparameterESN = {'internalNodes': 200, 
                             'inputScaling': 1, 
                             'inputShift': 0, 
-                            'spectralRadius': 0.17, 
-                            'regressionLambda': 1.0, 
-                            'connectivity': 0.011, 
-                            'leakingRate': 0.08, 
+                            'spectralRadius': 0.3, 
+                            'regressionLambda': 0.02, 
+                            'connectivity': 0.4, 
+                            'leakingRate': 0.03, 
                             'seed': 1}
 
     ESN = EchoStateNetworks.ESNmodel(1,1,hyperparameterESN)
@@ -48,7 +80,7 @@ def evaluate():
     loadPath = "32-Model.h5"
 
     LSTM = LongShortTermMemoryNetworks.LSTMmodel(loadPath = loadPath)
-    data.createLSTMDataSet(LSTM.lookBack, LSTM.forecastHorizon)
+    data.createLSTMDataSet(LSTM.lookBack, LSTM.forecastHorizon, noAssets)
 
     # Benchmark HAR Model
     dataHAR = dataUtils.convertHAR(data.xTrain)
@@ -56,8 +88,8 @@ def evaluate():
     HAR.fit(dataHAR)
 
     # Evaluate Models
-    windowMode = "Fixed"
-    windowSize = 0
+    windowMode = "Expanding"
+    windowSize = 30
     silent = False
 
     try:
@@ -67,10 +99,10 @@ def evaluate():
         set_start_method('spawn', True)
 
         pool = Pool(processes = 3)
-        input_list = [[data, ESN, daysAhead, windowMode, windowSize, silent],
-                      [data, LSTM, daysAhead, "Fixed", 30, silent],
+        inputArguments = [[data, ESN, daysAhead, windowMode, windowSize, silent],
+                      [data, LSTM, daysAhead, "Rolling", windowSize, silent],
                       [data, HAR, daysAhead, windowMode, windowSize, silent]]
-        results = pool.starmap(dataUtils.calculateErrorVectors, input_list)
+        results = pool.starmap(dataUtils.calculateErrorVectors, inputArguments)
         pool.close()
 
         evaluationESN = results[0]
@@ -79,7 +111,7 @@ def evaluate():
 
     except:
         # Sequential Alternative
-        print("Multiprocessing failed")
+        print("Multiprocessing failed - Sequential Evaluation")
         dataUtils.limitCPU(200)
         evaluationHAR = dataUtils.calculateErrorVectors(data, HAR, daysAhead,  
                                                     windowMode = windowMode,
@@ -97,9 +129,9 @@ def evaluate():
                                                 silent = False)
 
     # Plot Errors
-    def plotErrorVectors(evaulationESN, evaluationHAR, evaluationLSTM, errorType, alpha = 0.25):
+    def plotErrorVectors(evaluationESN, evaluationHAR, evaluationLSTM, errorType, alpha = 0.25):
 
-        tTestResultESN = ttest_ind(evaulationESN.errorMatrix[errorType], evaluationHAR.errorMatrix[errorType])
+        tTestResultESN = ttest_ind(evaluationESN.errorMatrix[errorType], evaluationHAR.errorMatrix[errorType])
         significantPointsESN = list(np.where(tTestResultESN[1]<alpha)[0])
 
         tTestResultLSTM = ttest_ind(evaluationLSTM.errorMatrix[errorType], evaluationHAR.errorMatrix[errorType])
@@ -107,7 +139,7 @@ def evaluate():
             
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(evaulationESN.errorVector[errorType], label = "ESN", color = 'red', marker = '*', markevery = significantPointsESN)
+        ax.plot(evaluationESN.errorVector[errorType], label = "ESN", color = 'red', marker = '*', markevery = significantPointsESN)
         ax.plot(evaluationLSTM.errorVector[errorType], label = "LSTM", color = 'green', marker = '*', markevery = significantPointsLSTM)
         ax.plot(evaluationHAR.errorVector[errorType] ,label = "HAR", color = 'blue')
         ax.set_title(errorType + " " + str(daysAhead) +' Days Forecasting Error \n Test Set Size:' + str(data.xTest.shape[0])+ "  " + windowMode + " Window")
@@ -123,6 +155,9 @@ def evaluate():
     for errorType in ["RMSE", "QLIK", "L1Norm"]:
         plotErrorVectors(evaluationESN, evaluationHAR, evaluationLSTM, errorType = errorType, alpha = 0.25)
 
+    return evaluationESN, evaluationHAR, evaluationLSTM
+
 
 if __name__ == "__main__":
-    evaluate()
+    evaluateMultivariate()
+    #evaluateUnivariate()

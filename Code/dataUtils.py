@@ -18,30 +18,31 @@ class Data:
         self.yTest = yTest
         self.scaler = scaler
     
-    def __convertDataLSTM(self, xVector, lookBack, forecastHorizon):
+    def __convertDataLSTM(self, xVector, lookBack, forecastHorizon, noAssets):
 
-        dataX, dataY = np.empty([1,lookBack]), np.empty([1,forecastHorizon])
+        dataX, dataY = np.zeros([1, lookBack, noAssets]), np.zeros([forecastHorizon, noAssets])
 
         for i in range(lookBack, len(xVector) - 1 - forecastHorizon):
 
-            x_lookback = xVector[i - lookBack:i].T
-            dataX = np.concatenate((dataX, x_lookback), axis = 0)
+            xlookback = np.expand_dims(xVector[i - lookBack:i], axis = 0)
+            dataX = np.concatenate((dataX, xlookback), axis = 0)
 
-            y_multistepForecast = xVector[i: i + forecastHorizon].T
-            dataY = np.concatenate((dataY, y_multistepForecast), axis = 0)
+            ymultistepForecast = xVector[i: i + forecastHorizon]
+            dataY = np.concatenate((dataY, ymultistepForecast), axis = 0)
 
-            assert np.sum(np.subtract(np.concatenate((x_lookback.T,y_multistepForecast.T)), \
+            assert np.sum(np.subtract(np.concatenate((xlookback[-1],ymultistepForecast),axis = 0), \
                     xVector[i - lookBack:i + forecastHorizon])) == 0
 
-        dataX = dataX.reshape((dataX.shape[0], dataX.shape[1],1))[1:]
+        dataX = dataX.reshape((dataX.shape[0], dataX.shape[1],noAssets))[1:]
         dataY = dataY.reshape((dataY.shape[0], dataY.shape[1]))[1:]
 
         return dataX, dataY
 
-    def createLSTMDataSet(self,lookBack, forecastHorizon):
+    def createLSTMDataSet(self,lookBack, forecastHorizon, noAssets):
 
-        self.xTrainLSTM, self.yTrainLSTM = self.__convertDataLSTM(self.xTrain, lookBack, forecastHorizon)
-        self.xTestLSTM, self.yTestLSTM = self.__convertDataLSTM(self.xTest, lookBack, forecastHorizon)
+        self.xTrainLSTM, self.yTrainLSTM = self.__convertDataLSTM(self.xTrain, lookBack, forecastHorizon, noAssets)
+        self.xTestLSTM, self.yTestLSTM = self.__convertDataLSTM(self.xTest, lookBack, forecastHorizon, noAssets)
+        return 
 
 
 class ErrorMetrics:
@@ -61,10 +62,10 @@ def dataPrecprocessingUnivariate(path, fileName, rawData = None):
     rawData = rawData.set_index('Dates')
 
     preprocessedData = rawData[['DJI_rv', 
-               'FTSE_rv', 
-               'GDAXI_rv', 
-               'N225_rv', 
-               'EUR_rv']]
+                                'FTSE_rv', 
+                                'GDAXI_rv', 
+                                'N225_rv', 
+                                'EUR_rv']]
 
     preprocessedData.columns = preprocessedData.columns.str.replace("_rv", "")
 
@@ -75,29 +76,30 @@ def dataPrecprocessingUnivariate(path, fileName, rawData = None):
 
     return preprocessedData
 
-
-def loadScaleDataUnivariate(asset, path, fileName, scaleData = True, rawData = None):
-
-    scaler = None
-
+def loadScaleData(assetList, path, fileName, scaleData = True):
+    
     preprocessedData = dataPrecprocessingUnivariate(path, fileName)
 
-    timeSeries = np.array(preprocessedData["Log" + asset]).reshape(len(preprocessedData["Log" + asset]), 1)
+    timeSeries = np.zeros(np.array(preprocessedData["Log" + assetList[0]]).reshape(-1, 1).shape)
+    for asset in assetList:
+        timeSeries = np.hstack((timeSeries, np.array(preprocessedData["Log" + asset]).reshape(-1, 1)))
+    timeSeries = timeSeries[:,1:]
 
     nTrainingExamples = int((timeSeries.shape[0])*0.8)
-    yTrain = timeSeries[1:nTrainingExamples].reshape(nTrainingExamples - 1,1)
-    xTrain = timeSeries[:nTrainingExamples-1].reshape(nTrainingExamples -1,1)
+    yTrain = timeSeries[1:nTrainingExamples]
+    xTrain = timeSeries[:nTrainingExamples-1]
 
-    yTest = timeSeries[nTrainingExamples + 1:].reshape(timeSeries.shape[0] - nTrainingExamples -1,1)
-    xTest = timeSeries[nTrainingExamples:-1].reshape(timeSeries.shape[0] - nTrainingExamples -1,1)
+    yTest = timeSeries[nTrainingExamples + 1:]
+    xTest = timeSeries[nTrainingExamples: -1]
 
+    scaler = None
     if scaleData: 
         scaler = MinMaxScaler(feature_range = (0.0, 1))
-        xTrain = scaler.fit_transform(xTrain.reshape(-1, 1))
-        yTrain = scaler.transform(yTrain.reshape(-1, 1))
 
-        yTest = scaler.transform(yTest.reshape(-1, 1))
-        xTest = scaler.transform(xTest.reshape(-1, 1))
+        xTrain = scaler.fit_transform(xTrain)
+        yTrain = scaler.transform(yTrain)
+        yTest = scaler.transform(yTest)
+        xTest = scaler.transform(xTest)
 
     assert xTrain.shape == yTrain.shape
     assert xTest.shape == yTest.shape

@@ -1,23 +1,27 @@
 # tensorboard --logdir /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/NewCode --host=127.0.0.1
 import numpy as np
 
-from keras.optimizers       import Adam
-from keras.models           import Sequential, load_model
-from keras.layers           import Dense
-from keras.layers           import LSTM
-from keras.callbacks        import TensorBoard, Callback
-from keras.callbacks        import EarlyStopping
-from keras.regularizers     import l1
+from tensorflow.keras.optimizers       import Adam
+from tensorflow.keras.models           import Sequential, load_model
+from tensorflow.keras.layers           import Dense, LSTM, Dropout, add
+from tensorflow.compat.v2.keras.layers import Bidirectional
+from tensorflow.compat.v1.keras.layers import CuDNNLSTM
+from tensorflow.keras.callbacks        import TensorBoard, Callback, EarlyStopping
+from tensorflow.keras.regularizers     import l1
 import dataUtils
 
+from tensorflow import __version__ as tfVersion
+print("TF Version: " + str(tfVersion))
 
 class LSTMmodel:
 
-    def __init__(self, forecastHorizon = 30, lookBack = 32, 
-                                architecture = [32], 
-                                dropout = 0.0,
-                                regularization = 0.0,
-                                loadPath = None):
+    def __init__(self, forecastHorizon = 30, 
+                                    lookBack        = 32, 
+                                    architecture    = [32], 
+                                    dropout         = 0.0,
+                                    regularization  = 0.0,
+                                    loadPath        = None,
+                                    bidirectional   = False):
 
         np.random.seed(1)
         self.modelType          = "LSTM"
@@ -26,6 +30,7 @@ class LSTMmodel:
         self.architecture       = architecture
         self.dropout            = dropout
         self.regularization     = l1(regularization)
+        self.bidirectional      = bidirectional
 
         if loadPath is not None:
             self.model = load_model(loadPath)
@@ -39,63 +44,80 @@ class LSTMmodel:
             print("Model Loaded")
             #print(self.model.summary())
  
-    def createModel(self):
+    def createModel(self, gpuOptmized = False):
+
+        # This function takes self.architecture and creates 
+        # a tensorflow model out of it 
 
         inputDimension = 1
-        LSTMmodelStructure = Sequential()
-
-        # tbd
-        # TODO: Implement bidirectional attention
+        modelStructure = Sequential()
         
-        # Define a standard LSTM layer with optinal arguments 
-        def VanillaLSTM(nodes, **kwargs):
-            return LSTM(nodes,  activation='relu',
-                                dropout = self.dropout,
-                                kernel_initializer='random_uniform',
-                                bias_initializer='ones',
-                                recurrent_regularizer = self.regularization,
-                                **kwargs)
+        def LSTMCell(nodes, **kwargs):
 
-        # Add first layer
-        LSTMmodelStructure.add(VanillaLSTM(self.architecture[0],
-                                    return_sequences = (len(self.architecture) is not 1), 
-                                    input_shape = (self.lookBack, inputDimension)))
+            def cpuLSTM(nodes, **kwargs):
+                return LSTM(nodes, activation               ='relu',
+                                    dropout                 = self.dropout,
+                                    kernel_initializer      ='random_uniform',
+                                    bias_initializer        ='ones',
+                                    recurrent_regularizer   = self.regularization,
+                                    **kwargs)
+            
+            def gpuLSTM(nodes, **kwargs):
+                return CuDNNLSTM(nodes, kernel_initializer     ='random_uniform',
+                                        bias_initializer        ='ones',
+                                        recurrent_regularizer   = self.regularization,
+                                        **kwargs)
+
+            if not self.bidirectional:
+                if gpuOptmized: return gpuLSTM(nodes, **kwargs)
+                else:           return cpuLSTM(nodes, **kwargs)
+ 
+            if self.bidirectional: 
+                if gpuOptmized: return Bidirectional(gpuLSTM(nodes, **kwargs))
+                else:           return Bidirectional(cpuLSTM(nodes, **kwargs))
+
+
+        modelStructure.add(LSTMCell(self.architecture[0],
+                                            return_sequences = (len(self.architecture) is not 1), 
+                                            input_shape = (self.lookBack, inputDimension)))
         
-        # Add optional subsequent layers
         if len(self.architecture) > 1:
+
+            for layerNo in range(1,len(self.architecture) - 1):
+                modelStructure.add(LSTMCell(self.architecture[layerNo],
+                                                return_sequences = True))
+
+            modelStructure.add(LSTMCell(self.architecture[-1],
+                                            return_sequences = False))
+
+        modelStructure.add(Dense(self.forecastHorizon, activation='sigmoid'))
         
-            for i in range(1,len(self.architecture) - 1):
-                LSTMmodelStructure.add(VanillaLSTM(self.architecture[0],
-                                    return_sequences = True))
+        self.model = modelStructure
 
-            # Add the last LSTM Layer
-            LSTMmodelStructure.add(VanillaLSTM(self.architecture[-1],
-                                    return_sequences = False))
+    def train(self, epochs, 
+                    xTrainLSTM, 
+                    yTrainLSTM, 
+                    xTestLSTM, 
+                    yTestLSTM, 
+                    modelname    = "LSTM", 
+                    learningRate = 0.0001, 
+                    batchSize    = 256, 
+                    verbose      = 0):
 
-        # Add a Dense Layer
-        LSTMmodelStructure.add(Dense(self.forecastHorizon, activation='sigmoid'))
-        
-        self.model = LSTMmodelStructure
+        self.model.compile(loss = 'mse', optimizer = Adam(lr = learningRate, 
+                                                            clipvalue = 0.5, 
+                                                            decay     = 1e-12))
 
-    def train(self, epochs, xTrainLSTM, yTrainLSTM, 
-                        xTestLSTM, yTestLSTM, modelname = "LSTM", 
-                        learningRate = 0.0001, batchSize = 256):
-
-        # ADAM with gradient clipping and learning rate decay
-        self.model.compile(loss = 'mse', optimizer = Adam(lr=learningRate, clipvalue = 0.5, decay=1e-12))
-
-        # Tensorbaord Log
         tensorboard = TensorBoard(log_dir='./Log' + modelname, 
-                                histogram_freq = 0, 
-                                write_graph = False, 
-                                write_images = True)
+                                histogram_freq  = 0, 
+                                write_graph     = False, 
+                                write_images    = True)
                 
-        # Train Model
-        self.model.fit(xTrainLSTM, yTrainLSTM, 
-                            epochs = epochs, 
-                            batch_size = batchSize, 
-                            verbose = 0, 
-                            callbacks=[tensorboard, outputLog,overfitCallback], 
+        history = self.model.fit(xTrainLSTM, yTrainLSTM, 
+                            epochs      = epochs, 
+                            batch_size  = batchSize, 
+                            verbose     = verbose, 
+                            callbacks   = [tensorboard,overfitCallback], 
                             validation_data = (xTestLSTM, yTestLSTM))
 
         print("Model trained")
@@ -104,7 +126,9 @@ class LSTMmodel:
         self.model.save(modelname +"-Model.h5")
         print("Model Saved")
 
-    def multiStepAheadForecast(self, data, forecastHorizon, startIndex, windowMode, windowSize = 0):
+        return history
+
+    def multiStepAheadForecast(self, data, forecastHorizon, startIndex, windowMode, windowSize = 60):
         
         # If output shape is equal to one, perform recursive forecasting, otherwise do 
         # direct sequence to sequence forecasting
@@ -113,7 +137,7 @@ class LSTMmodel:
             assert windowSize > 0, "multiStepAheadForecast: windowSize is not defined"
             newxTrain = np.concatenate([data.xTrainLSTM, data.xTestLSTM[:startIndex]])
             newyTrain = np.concatenate([data.yTrainLSTM, data.yTestLSTM[:startIndex]])
-            self.model.fit(newxTrain[-windowSize:], newyTrain[-windowSize:], epochs = 50, batch_size = self.lookBack,verbose = 0, callbacks = [overfitCallback2])
+            self.model.fit(newxTrain[-windowSize:], newyTrain[-windowSize:], epochs = 100, batch_size = self.lookBack,verbose = 0, callbacks = [overfitCallback2])
             #self.model.fit(newxTrain[-windowSize:], newyTrain[-windowSize:], epochs = 1, batch_size = self.lookBack,verbose = 2)
             self.model.save("32a-Model.h5")
 

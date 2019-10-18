@@ -13,19 +13,27 @@ from json import dumps
 import warnings
 warnings.filterwarnings("ignore")
 
-def evaluateMultivariate():
+try:
+    from google.colab import files as colabFiles
+    runningInColab = True
+except:
+    runningInColab = False 
+
+def evaluateMultivariate(): 
     # ----------------------
-    path        = "/Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Code/Data/"
-    fileName    = "realized.library.0.1.csv"
+    path        = "./Data/"
+    fileName     = "realized.library.0.1.csv"
+    loadPathLSTM = "8-Multi-GPU-Model.h5" 
+    #loadPathLSTM = "8-Multi-Model.h5"
+    #loadPathLSTM = "32-Model.h5"
+
     assetList   = ['DJI', 'FTSE', 'GDAXI', 'N225', 'EUR']
+    #assetList   = ['DJI']
     noAssets    = len(assetList)
     daysAhead   = 30
+    trainingFraction = 0.8
 
-    testSetPartition = 100
-    data = dataUtils.loadScaleData(assetList, path, fileName)
-    data.xTest = data.xTest[:testSetPartition]
-    data.yTest = data.yTest[:testSetPartition]
-    # ----------------------
+    # internalNodes: 200
     hyperparameterESN = {'internalNodes': 200, 
                             'inputScaling': 1, 
                             'inputShift': 0, 
@@ -35,14 +43,81 @@ def evaluateMultivariate():
                             'leakingRate': 0.03, 
                             'seed': 1}
 
-    ESN = EchoStateNetworks.ESNmodel(noAssets,noAssets,hyperparameterESN)
-    ESN.fit(data.xTrain, data.yTrain, nForgetPoints = 50)
+    ESN = EchoStateNetworks.ESNmodel(noAssets, noAssets, hyperparameterESN)
+    LSTM = LongShortTermMemoryNetworks.LSTMmodel(loadPath = loadPathLSTM)
+    HAR = HeterogeneousAutoRegressive.HARmodel()
 
-    loadPath = "32-Model.h5"
+    data = dataUtils.loadScaleData(assetList, path, fileName)
+    splitIndex = int(trainingFraction*len(data.scaledTimeSeries))
+    
+    data.createLSTMDataSet(LSTM.lookBack)
+    data.createHARDataSet()
+    data.splitData(splitIndex)
 
-    LSTM = LongShortTermMemoryNetworks.LSTMmodel(loadPath = loadPath)
-    data.createLSTMDataSet(LSTM.lookBack, LSTM.forecastHorizon, noAssets)
+    ESN.fit(data, nForgetPoints = 50)
+    HAR.fit(data.dataHARtrain())
+
+    # Evaluate Models
+    windowMode = "Expanding"
+    windowSize = 30
+    silent = False
+
+     # Sequential Alternative
+    print("Sequential Evaluation")
+    if not runningInColab: dataUtils.limitCPU(200)
+    
+    evaluationHAR = dataUtils.calculateErrorVectors(data, HAR, daysAhead,  
+                                                windowMode = windowMode,
+                                                windowSize = windowSize,
+                                                silent = silent, 
+                                                startInd = splitIndex)
+    
+    evaluationESN = dataUtils.calculateErrorVectors(data, ESN, daysAhead, 
+                                                windowMode = windowMode,
+                                                windowSize = windowSize,
+                                                silent = silent,
+                                                startInd = splitIndex)
+    
+    evaluationLSTM = dataUtils.calculateErrorVectors(data, LSTM, daysAhead,  
+                                                windowMode = "Rolling",
+                                                windowSize = windowSize,
+                                                silent = silent,
+                                                startInd = splitIndex)
+    # Plot Errors
+    def plotErrorVectors(evaluationESN, evaluationHAR, evaluationLSTM, errorType, alpha = 0.25):
+
+        tTestResultESN = ttest_ind(evaluationESN.errorMatrix[errorType], evaluationHAR.errorMatrix[errorType])
+        significantPointsESN = list(np.where(tTestResultESN[1]<alpha)[0])
+
+        tTestResultLSTM = ttest_ind(evaluationLSTM.errorMatrix[errorType], evaluationHAR.errorMatrix[errorType])
+        significantPointsLSTM = list(np.where(tTestResultLSTM[1]<alpha)[0])
+            
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(evaluationESN.errorVector[errorType], 
+            label = "ESN", color = 'red', marker = '*', markevery = significantPointsESN)
+        ax.plot(evaluationLSTM.errorVector[errorType], 
+            label = "LSTM", color = 'green', marker = '*', markevery = significantPointsLSTM)
+        ax.plot(evaluationHAR.errorVector[errorType],
+            label = "HAR", color = 'blue')
+        ax.set_title(errorType + " " + str(daysAhead) +
+            ' Days Forecasting Error \n Test Set Size:' + str(data.xTest().shape[0])+ "  " +
+             windowMode + " Window")
+        ax.text(0.95, 0.01, dumps(hyperparameterESN,indent=2)[1:-1].replace('"',''),
+            verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
+            multialignment = "left")
+
+        plt.legend()
+        plt.show()
+    
+    # Plot Charts
+    for errorType in ["RMSE", "QLIK", "L1Norm"]:
+        plotErrorVectors(evaluationESN, evaluationHAR, evaluationLSTM, errorType = errorType, alpha = 0.25)
+    
     print("Done")
+    return evaluationESN, evaluationHAR, evaluationLSTM
+
+
     # ----------------------
 
 
@@ -59,8 +134,7 @@ def evaluateUnivariate():
     data = dataUtils.loadScaleData(assetList, path, fileName)
     data.xTest = data.xTest[:testSetPartition]
     data.yTest = data.yTest[:testSetPartition]
-    #data.xTest = data.xTrain
-    #data.yTest = data.yTrain
+
 
     # Echo State Network
     hyperparameterESN = {'internalNodes': 200, 
@@ -144,7 +218,6 @@ def evaluateUnivariate():
         ax.plot(evaluationHAR.errorVector[errorType] ,label = "HAR", color = 'blue')
         ax.set_title(errorType + " " + str(daysAhead) +' Days Forecasting Error \n Test Set Size:' + str(data.xTest.shape[0])+ "  " + windowMode + " Window")
         ax.text(0.95, 0.01, dumps(hyperparameterESN,indent=2)[1:-1].replace('"',''),
-
             verticalalignment='bottom', horizontalalignment='right', transform=ax.transAxes,
             multialignment = "left")
 

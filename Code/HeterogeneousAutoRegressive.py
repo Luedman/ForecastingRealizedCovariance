@@ -1,6 +1,12 @@
 import statsmodels.api as sm
 import numpy as np
+from pandas import DataFrame
 import dataUtils
+
+from matplotlib import pyplot as plt
+
+import warnings
+warnings.filterwarnings("ignore")
 
 class HARmodel:
 
@@ -11,7 +17,13 @@ class HARmodel:
 
     def fit(self, dataHAR, silent = True):
 
-        modelSetUp = sm.OLS(dataHAR['Y'], sm.add_constant(dataHAR[['X1', 'X5', 'X22']]))
+        Y = dataHAR['y']
+        X = sm.add_constant(np.concatenate([dataHAR['xDay'], 
+                                            dataHAR['xWeek'], 
+                                            dataHAR['xMonth']], 
+                                            axis = 1))
+
+        modelSetUp = sm.OLS(Y, X)
         self.model = modelSetUp.fit()
 
         if not silent:
@@ -19,46 +31,70 @@ class HARmodel:
 
         self.fitted = True
 
-    def oneStepAheadForecast(self, historicDataVector):
-
-        const  = self.model.params[0]
-        beta_d = self.model.params[1]
-        beta_w = self.model.params[2]
-        beta_m = self.model.params[3]
-
-        estimate = const + beta_d * historicDataVector[-1] + \
-            beta_w * sum(historicDataVector[-5:-1])/4 + beta_m * sum(historicDataVector[-22:-1])/21
-
-        return estimate
-
-    def multiStepAheadForecast(self, data, forecastHorizon, startIndex, 
+    def multiStepAheadForecast(self, data, forecastHorizon, index, 
                                             windowMode, windowSize = 0):
-
-        assert startIndex - 22 > 0
-        assert windowMode.upper() in ["EXPANDING", "ROLLING", "FIXED"], "Window Mode not recognized"
-
+        
         if windowMode.upper() == "EXPANDING":
-            newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
-            newdataHAR = dataUtils.convertHAR(newxTrain[:])
-            self.fit(newdataHAR, silent = True)
+            data.splitData(index, startPointIndex = 0)
+            self.fit(data.dataHARtrain())
         elif windowMode.upper() == "ROLLING":
-            newxTrain = np.concatenate([data.xTrain, data.xTest[:startIndex]])
-            newdataHAR = dataUtils.convertHAR(newxTrain[-windowSize:])
-            self.fit(newdataHAR, silent = True)
-        else: pass
+            data.splitData(index, startPointIndex = index - windowSize)
+            self.fit(data)
+        elif windowMode.upper() == "FIXED":
+            data.splitData(index, startPointIndex = 0)
+        
+        actual = data.dataHARtest()['y'][:forecastHorizon]
+        assert actual.shape == (forecastHorizon,data.noTimeSeries)
+        
 
+        def oneStepAheadForecast(historicDataVector):
 
-        historicDataVector = data.xTest[startIndex - 22: startIndex]
+            const  = self.model.params[0]
+            beta_d = self.model.params[1]
+            beta_w = self.model.params[2]
+            beta_m = self.model.params[3]
+
+            estimate = const + beta_d * historicDataVector[-1] + \
+                beta_w * sum(historicDataVector[-5:-1])/4 + beta_m * sum(historicDataVector[-22:-1])/21
+
+            return estimate
 
         def predict(forecastHorizon, forecast, historicDataVector):
 
             backlog = np.append(historicDataVector, forecast)
 
-            forecast.append(self.oneStepAheadForecast(backlog))
+            forecast.append(oneStepAheadForecast(backlog))
 
             return predict(forecastHorizon, forecast, historicDataVector) if len(forecast) < forecastHorizon \
                 else np.array(forecast)
         
-        multiStepAheadForecast = predict(forecastHorizon, [], historicDataVector)
+        #multiStepForecast2 = predict(forecastHorizon, [], data.dataHARtrain()).reshape(-1, 1)
 
-        return multiStepAheadForecast.reshape(forecastHorizon, 1)
+        def recursiveForecast(forecast, backlog):
+
+            dataHAR = data.createHARDataSet(backlog[-60:])
+
+            X = sm.add_constant(np.concatenate([dataHAR['xDay'], 
+                                                dataHAR['xWeek'], 
+                                                dataHAR['xMonth']], 
+                                                axis = 1))
+
+            oneDayAheadForecast = self.model.predict(X[-1]).reshape(1,-1)
+
+            backlog = np.concatenate([backlog, oneDayAheadForecast])
+            forecast = np.concatenate([forecast, oneDayAheadForecast])
+
+            return recursiveForecast(forecast, backlog) if forecast.shape[0] - 1 < forecastHorizon \
+                else forecast[1:]
+
+        multiStepForecast = recursiveForecast(np.zeros((1,data.noTimeSeries)), data.dataHARtrain()['xDay'])
+
+        def plotmultiStepForecast():
+            
+            plt.plot(multiStepForecast2, label = "FC2")
+            plt.plot(multiStepForecast, label = "FC")
+            plt.plot(actual, label = "AC")
+            plt.legend()
+            plt.show()
+        
+        return multiStepForecast, actual

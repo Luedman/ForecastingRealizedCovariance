@@ -45,31 +45,7 @@ class HARmodel:
         
         actual = data.dataHARtest()['y'][:forecastHorizon]
         assert actual.shape == (forecastHorizon,data.noTimeSeries)
-        
-
-        def oneStepAheadForecast(historicDataVector):
-
-            const  = self.model.params[0]
-            beta_d = self.model.params[1]
-            beta_w = self.model.params[2]
-            beta_m = self.model.params[3]
-
-            estimate = const + beta_d * historicDataVector[-1] + \
-                beta_w * sum(historicDataVector[-5:-1])/4 + beta_m * sum(historicDataVector[-22:-1])/21
-
-            return estimate
-
-        def predict(forecastHorizon, forecast, historicDataVector):
-
-            backlog = np.append(historicDataVector, forecast)
-
-            forecast.append(oneStepAheadForecast(backlog))
-
-            return predict(forecastHorizon, forecast, historicDataVector) if len(forecast) < forecastHorizon \
-                else np.array(forecast)
-        
-        #multiStepForecast2 = predict(forecastHorizon, [], data.dataHARtrain()).reshape(-1, 1)
-
+    
         def recursiveForecast(forecast, backlog):
 
             dataHAR = data.createHARDataSet(backlog[-60:])
@@ -87,14 +63,7 @@ class HARmodel:
             return recursiveForecast(forecast, backlog) if forecast.shape[0] - 1 < forecastHorizon \
                 else forecast[1:]
 
-        multiStepForecast = recursiveForecast(np.zeros((1,data.noTimeSeries)), data.dataHARtrain()['xDay'])
-
-        def plotmultiStepForecast():
-            
-            plt.plot(multiStepForecast2, label = "FC2")
-            plt.plot(multiStepForecast, label = "FC")
-            plt.plot(actual, label = "AC")
-            plt.legend()
-            plt.show()
+        multiStepForecast = recursiveForecast(np.zeros((1,data.noTimeSeries)), 
+                                data.dataHARtrain()['xDay'])
         
         return multiStepForecast, actual

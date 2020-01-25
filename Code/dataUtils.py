@@ -2,7 +2,12 @@ import numpy as np
 import pandas as pd
 
 from sklearn.preprocessing import MinMaxScaler
+from scipy.linalg import expm as matrixExponetial
+from scipy.linalg import logm as matrixLogarithm
+from scipy.stats import entropy
 from matplotlib import pyplot as plt
+from itertools import combinations_with_replacement
+import datetime as dt
 
 from os import getpid
 from subprocess import Popen
@@ -14,10 +19,13 @@ warnings.filterwarnings("ignore")
 
 
 class Data:
-    def __init__(self, scaledTimeSeries, scaler):
+    def __init__(self, scaledTimeSeries, scaler, noAssets, nameDataSet, index):
 
         self.scaledTimeSeries = scaledTimeSeries
         self.scaler = scaler
+        self.nameDataSet = nameDataSet
+        self.noAssets = noAssets
+        self.index = index
 
         self.noTimeSeries = self.scaledTimeSeries.shape[1]
         self.maxLookBack = 25
@@ -105,6 +113,21 @@ class Data:
     def splitData(self, splitIndex, startPointIndex=0):
         self.splitIndex = splitIndex
         self.startPointIndex = startPointIndex
+        testingRangeStartDate = self.index[splitIndex]
+        testingRangeEndDate = self.index[-1]
+        return testingRangeStartDate, testingRangeEndDate
+
+    def splitDataByDate(self, splitDate, startDate=None):
+        assert splitDate in list(self.index), "Date not found"
+        self.splitIndex = list(self.index).index(splitDate)
+        try:
+            self.startPointIndex = list(self.index).index(startDate)
+        except Exception:
+            self.startPointIndex = 0
+
+        testingRangeStartDate = self.index[self.splitIndex]
+        testingRangeEndDate = self.index[-1]
+        return testingRangeStartDate, testingRangeEndDate
 
     def xTrain(self):
         return self.scaledTimeSeries[
@@ -150,13 +173,57 @@ class Data:
 
 
 class ErrorMetrics:
-    def __init__(self, errorVectors, errorMatrices):
+    def __init__(
+        self, errorVectors, errorMatrices, modelName="NA", modelType="NA", testSetSize=0,
+        oneDayAheadError = []):
 
         self.errorVector = errorVectors
         self.errorMatrix = errorMatrices
+        self.modelName = modelName
+        self.modelType = modelType
+        self.testSetSize = testSetSize
+        self.oneDayAheadError = oneDayAheadError
 
 
-def dataPrecprocessingUnivariate(path, fileName, rawData=None):
+def createVarianceVector(data, assetList, dateIndex):
+
+    assetList = list(set(assetList))
+    assetList.sort()
+
+    date = data.index[dateIndex]
+
+    assetCombos = list(combinations_with_replacement(assetList, 2))
+    assetCombos = [combo[0] + "-" + combo[1] for combo in assetCombos]
+
+    varianceVector = data.loc[date][assetCombos].values
+
+    assert not any(np.isinf(varianceVector)), "Inf"
+
+    return np.array(varianceVector)
+
+
+def covMatFromVector(varianceVector, noAssets):
+
+    covarianceMatrix = np.zeros((noAssets, noAssets))
+    covarianceMatrix.T[np.tril_indices(noAssets, 0)] = varianceVector
+
+    ilower = np.tril_indices(noAssets, -1)
+    covarianceMatrix[ilower] = covarianceMatrix.T[ilower]
+
+    return covarianceMatrix
+
+
+def varVectorFromCovMat(covarianceMatrix):
+
+    assert covarianceMatrix.shape[0] == covarianceMatrix.shape[1]
+
+    ilower = np.tril_indices(covarianceMatrix.shape[0], 0)
+    varianceVector = covarianceMatrix[ilower]
+
+    return varianceVector
+
+
+def dataPrecprocessingOxfordMan(path, fileName, rawData=None):
 
     if rawData == None:
         rawData = pd.read_csv(path + fileName, skiprows=1, sep="\,", engine="python")
@@ -179,9 +246,12 @@ def dataPrecprocessingUnivariate(path, fileName, rawData=None):
     return preprocessedData
 
 
-def loadScaleData(assetList, path, fileName):
+def loadScaleDataOxfordMan(assetList):
 
-    preprocessedData = dataPrecprocessingUnivariate(path, fileName)
+    path = "./Data/"
+    fileName = "realized.library.0.1.csv"
+
+    preprocessedData = dataPrecprocessingOxfordMan(path, fileName)
 
     timeSeries = np.zeros(
         np.array(preprocessedData["Log" + assetList[0]]).reshape(-1, 1).shape
@@ -195,12 +265,68 @@ def loadScaleData(assetList, path, fileName):
     scaler = MinMaxScaler(feature_range=(0.0, 1))
     scaledTimeSeries = scaler.fit_transform(timeSeries)
 
-    return Data(scaledTimeSeries, scaler)
+    return Data(scaledTimeSeries, scaler, assetList, "OxfordMan")
+
+
+def loadScaleDataMultivariate(
+    assetList,
+    loadpath,
+    startDate=dt.datetime(1999, 1, 6),
+    endDate=dt.datetime(2008, 12, 31),
+):
+    def getHeader(loadpath):
+
+        header = pd.read_excel(loadpath + "no_trade.xls")
+        header = header.set_index("date")
+        header = header.drop(["BTI", "GSK", "ITT", "TM", "UVV"], axis=1)
+        try:
+            header = header.drop(["Unnamed: 0"], axis=1)
+        except:
+            pass
+
+        columnNames = []
+        for asset in header.columns.tolist()[:-1]:
+            index = list(header.columns).index(asset)
+            columnNames.append(asset + "-" + asset)
+            for crossAsset in header.columns[index + 1 :].tolist():
+                columnNames.append(asset + "-" + crossAsset)
+
+        columnNames.append(header.columns[-1] + "-" + header.columns[-1])
+        columnNames.sort()
+
+        return columnNames
+
+    noAssets = len(assetList)
+    data = pd.read_csv(
+        loadpath + "RVOC_6m.csv", engine="python", skiprows=[1], index_col="Var1"
+    )
+    data = data.drop("Unnamed: 0", axis=1)
+    data.columns = getHeader(loadpath)
+    data.index = pd.to_datetime(data.index, format="%Y%m%d")
+    assert startDate in list(data.index), str(startDate) + " not in index"
+    assert endDate in list(data.index), str(endDate) + " not in index"
+    data = data[pd.Timestamp(startDate) : pd.Timestamp(endDate)]
+
+    varVectorList = []
+    for i in range(1, len(data.index)):
+        varVector = createVarianceVector(data, assetList, i)
+        covMat = np.real(matrixLogarithm(covMatFromVector(varVector, noAssets)))
+        varVector = varVectorFromCovMat(covMat).reshape(1, -1, order="C")
+        varVectorList.append(varVector)
+    varVectorData = np.concatenate(varVectorList, axis=0)
+
+    scaler = MinMaxScaler(feature_range=(0.0, 1))
+    scaledTimeSeries = scaler.fit_transform(varVectorData)
+
+    return Data(scaledTimeSeries, scaler, noAssets, "Multivariate", data.index)
 
 
 def calculateErrorVectors(
     data, model, forecastHorizon, windowMode, windowSize=None, silent=True, startInd=25
 ):
+
+    if model.modelType == "LSTM":
+        data.createLSTMDataSet(model.lookBack)
 
     # When using multiprocessing, limit CPU Usage depending of model Type
     if current_process().name is not "MainProcess":
@@ -212,16 +338,12 @@ def calculateErrorVectors(
             limitCPU(20)
 
     finalInd = data.scaledTimeSeries.shape[0] - forecastHorizon - data.maxLookBack
-    finalInd = startInd + 250
+    # finalInd = data.scaledTimeSeries.shape[0] - 31
     assert windowMode.upper() in [
         "EXPANDING",
         "ROLLING",
         "FIXED",
     ], "Window Mode not recognized"
-
-    errorMatrices = {"RMSE": [], "QLIK": [], "L1Norm": []}
-
-    avgErrorVectors = {"RMSE": None, "QLIK": None, "L1Norm": None}
 
     def modelForecast(model, index):
 
@@ -229,25 +351,68 @@ def calculateErrorVectors(
             data, forecastHorizon, index, windowMode, windowSize
         )
 
-        if data.scaler is not None:
-            forecast = data.scaler.inverse_transform(forecast)
-            actual = data.scaler.inverse_transform(actual)
+        forecast = data.scaler.inverse_transform(forecast)
+        actual = data.scaler.inverse_transform(actual)
 
-        assert actual.shape == forecast.shape, (
-            "actual "
-            + str(actual.shape)
-            + " and forecast shape "
-            + str(forecast.shape)
-            + " do not match"
-        )
+        if data.nameDataSet == "OxfordMan":
+            actual = np.exp(actual)
+            forecast = np.exp(forecast)
+
+        if data.nameDataSet == "Multivariate":
+            forecast = np.array(
+                [
+                    matrixExponetial(covMatFromVector(vector, data.noAssets))
+                    for vector in forecast
+                ]
+            )
+            actual = np.array(
+                [
+                    matrixExponetial(covMatFromVector(vector, data.noAssets))
+                    for vector in actual
+                ]
+            )
+
+        assert actual.shape == forecast.shape
 
         return actual, forecast
 
+    errorTypesList = ["RMSE", "QLIK" ,"L1Norm"]
+    errorMatrices = {"RMSE": [], "QLIK": [], "L1Norm": []}
+    errorOneDay = {"RMSE": [], "QLIK": [], "L1Norm": []}
+    avgErrorVectors = dict.fromkeys(errorTypesList)
+
+    def calculateForecastingError(errorType, actual, forecast):
+        def RMSE(i):
+            return np.matmul(
+                (actual[i : i + 1].flatten() - forecast[i : i + 1].flatten()),
+                (actual[i : i + 1].flatten() - forecast[i : i + 1].flatten()).T,
+            )
+
+        def QLIK(i):
+            (sign, logdet) = np.linalg.slogdet(forecast[i]*10000)
+
+            result =  logdet + np.trace(
+                np.matmul(np.linalg.inv(forecast[i]*10000), actual[i]*10000)
+            )
+            return result
+
+        def L1Norm(i):
+            return np.linalg.norm((actual[i] - forecast[i]), ord=1)
+
+        errorVector = [0]
+        for i in range(0, forecast.shape[0]):
+            try:
+                errorVector.append(eval(errorType + "(i)"))
+            except:
+                print("Error when calculating" + errorType)
+
+        return np.clip(errorVector[1:], a_min=None, a_max=1).reshape(-1, 1), errorVector[1]
+
     for index in range(startInd, finalInd):
 
-        if silent is False and (index % 25 == 0 or index == finalInd - 1):
+        if silent is False and (index % 100 == 0 or index == finalInd - 1):
             print(
-                model.modelType
+                model.modelName
                 + " Evaluation is at index: "
                 + str(index)
                 + "/ "
@@ -256,38 +421,15 @@ def calculateErrorVectors(
 
         actual, forecast = modelForecast(model, index)
 
-        def calculateForecastingError(errorType):
+        for errorType in errorTypesList:
+            oneDayError, errorVector = calculateForecastingError(errorType, actual, forecast)
+            errorMatrices[errorType].append(oneDayError)
+            errorOneDay[errorType].append(errorVector)
 
-            if errorType == "RMSE":
-                errorVector = np.mean(
-                    np.power(np.exp(forecast) - np.exp(actual), 2),
-                    axis=1,
-                    keepdims=True,
-                )
-            elif errorType == "QLIK":
-                errorVector = np.mean(
-                    np.log(np.exp(actual) / np.exp(forecast))
-                    + np.exp(actual) / np.exp(forecast),
-                    axis=1,
-                    keepdims=True,
-                )
-            elif errorType == "L1Norm":
-                errorVector = np.linalg.norm((forecast - actual), axis=1, keepdims=True)
-
-            errorMatrices[errorType].append(errorVector)
-
-            if errorType == "RMSE":
-                avgErrorVectors[errorType] = np.sqrt(
-                    np.average(errorMatrices[errorType], axis=0)
-                )
-            elif errorType in ["QLIK", "L1Norm"]:
-                avgErrorVectors[errorType] = np.average(
-                    errorMatrices[errorType], axis=0
-                )
-
-        calculateForecastingError("RMSE")
-        calculateForecastingError("QLIK")
-        calculateForecastingError("L1Norm")
+    avgErrorVectors["RMSE"] = np.sqrt(errorMatrices["RMSE"])
+    for errorType in errorTypesList:
+        avgErrorVectors[errorType] = np.mean(
+            np.concatenate(errorMatrices[errorType], axis=1), axis=1, keepdims=True)
 
         # Debug Function
         def showForecast(errorType):
@@ -295,27 +437,28 @@ def calculateErrorVectors(
             avgErrorVector = avgErrorVectors[errorType]
             errorMatrix = errorMatrices[errorType]
 
-            ax1 = plt.subplot(3, 1, 1)
-            ax1.set_title("Actual vs Forecast")
-            ax1.plot(np.exp(forecast), label="Forecast")
-            ax1.plot(np.exp(actual), label="Actual")
-            ax1.legend()
-
-            ax2 = plt.subplot(3, 1, 2)
+            ax2 = plt.subplot(2, 1, 2)
             for i in range(0, len(errorMatrix)):
                 shade = str(i / (len(errorMatrix) + 0.1))
                 ax2.plot(np.sqrt(errorMatrix[i]), color=shade, linestyle="dotted")
             ax2.plot(avgErrorVector, color="blue", marker="x")
             ax2.set_title("Error Vectors.")
 
-            ax3 = plt.subplot(3, 1, 3)
+            ax3 = plt.subplot(2, 1, 3)
             ax3.set_title("Error Vector Avg. Index: " + str(index))
             ax3.plot(avgErrorVector, color="blue", marker="x")
 
             plt.tight_layout()
             plt.show()
 
-    return ErrorMetrics(avgErrorVectors, errorMatrices)
+    return ErrorMetrics(
+        avgErrorVectors,
+        errorMatrices,
+        model.modelName,
+        model.modelType,
+        (finalInd - startInd + forecastHorizon),
+        errorOneDay
+    )
 
 
 def limitCPU(cpuLimit):

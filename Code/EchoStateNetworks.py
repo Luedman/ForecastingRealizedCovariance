@@ -10,6 +10,7 @@ from datetime import datetime
 from copy import copy
 from json import dumps
 from bayes_opt import BayesianOptimization
+import datetime as dt
 
 from sklearn.metrics import mean_squared_error
 from scipy.stats import ttest_ind
@@ -27,11 +28,12 @@ counter = 0
 
 
 class ESNmodel:
-    def __init__(self, nInputNodes, nOutputNodes, hyperparameter):
+    def __init__(self, nInputNodes, nOutputNodes, hyperparameter, modelName="ESN"):
 
         hyperparameterESN = copy(hyperparameter)
 
         np.random.seed(1)
+        self.modelName = modelName
         self.modelType = "ESN"
         self.nInputNodes = nInputNodes
         self.nOutputNodes = nOutputNodes
@@ -182,11 +184,11 @@ class ESNmodel:
 
         return self.collectedStateMatrix[:, nForgetPoints + 1 :]
 
-    def test(self, xTest, nForgetPoints=100):
+    def test(self, xTrain, nForgetPoints=100):
 
         assert self.networkTrained == True, "Network isn't trained yet"
 
-        collectedStateMatrix = self.__collectStateMatrix(xTest, nForgetPoints)
+        collectedStateMatrix = self.__collectStateMatrix(xTrain, nForgetPoints)
 
         outputSequence = self.__outputActivationFunction(
             np.matmul(self.reservoirReadout, collectedStateMatrix)
@@ -195,9 +197,9 @@ class ESNmodel:
             outputSequence - np.ones((outputSequence.shape)) * self.inputShift
         ) / self.inputScaling
 
-        rmse = np.substract(outputSequence.T)
-        print("RMSE")
-        return outputSequence.T
+        avgRMSE = np.mean(np.power(xTrain[nForgetPoints:] - outputSequence.T, 2))
+
+        return avgRMSE
 
     def fit(self, data, nForgetPoints):
 
@@ -228,14 +230,6 @@ class ESNmodel:
         outputSequence = (
             outputSequence - np.ones((outputSequence.shape)) * self.inputShift
         ) / self.inputScaling
-
-        def showOutputSequence(start=0, end=-1):
-            # Debug Function
-            actual = xTrain[nForgetPoints:]
-            plt.plot(actual[start:end], label="Actual")
-            plt.plot(outputSequence[start:end], label="ESN Fit")
-            plt.legend()
-            plt.show()
 
         self.modelResidualMatrix = yTrain[nForgetPoints:] - outputSequence
 
@@ -286,10 +280,6 @@ class ESNmodel:
         self, data, forecastHorizon, index, windowMode, windowSize, noSamples=1
     ):
 
-        assert (
-            self.networkTrained == True
-        ), "ESN is not trained of failed in the Process"
-
         if windowMode.upper() == "EXPANDING":
             data.splitData(index, startPointIndex=0)
             self.fit(data, nForgetPoints=50)
@@ -298,6 +288,7 @@ class ESNmodel:
             self.fit(data, nForgetPoints=50)
         elif windowMode.upper() == "FIXED":
             data.splitData(index, startPointIndex=0)
+            assert self.networkTrained == True
 
         actual = data.yTest()[:forecastHorizon]
 
@@ -340,8 +331,7 @@ class ESNmodel:
                 multiStepForecast[i] = np.average(oneStepForecastingSamples)
                 prevReservoirState = reservoirState
             else:
-                # print("Error when forecasting")
-                multiStepForecast[i] = 0
+                multiStepForecast[i] = multiStepForecast[i - 1]
                 prevReservoirState = reservoirState
 
         def showForecast():
@@ -361,7 +351,7 @@ class ESNmodel:
 
         return multiStepForecast, actual
 
-
+# Hyperparameter Grid Search
 def searchOptimalParamters():
     print("Hyperparameter Search ESN")
 
@@ -466,30 +456,29 @@ def searchOptimalParamters():
 
     return
 
-
-def baysianOptimization():
-    print("Baysian Optimization")
+# Hyperparameter Bayesian Search
+def bayesianOptimization(dataPath="./Data/"):
+    print("Bayesian Optimization")
 
     # Disable Warnings (especially overflow)
     warnings.filterwarnings("ignore")
 
     # USER INPUT
-    path = "./Data/"
-    fileName = "realized.library.0.1.csv"
-    assetList = ["DJI"]
+    assetList = ["WMT", "AAPL", "ABT"]
+
     daysAhead = 30
+    trainingFraction = 0.8
 
-    testSetPartition = 250
-    data = dataUtils.loadScaleData(assetList, path, fileName)
-    data.xTest = data.xTest[:testSetPartition]
-    data.yTest = data.yTest[:testSetPartition]
-    # data.xTest = data.xTrain
-    # data.yTest = data.yTrain
+    data = dataUtils.loadScaleDataMultivariate(assetList, dataPath, endDate=dt.datetime(2005, 6, 1))
+    splitIndex = int(trainingFraction * len(data.scaledTimeSeries))
+    data.splitData(splitIndex)
 
-    def esnEvaluation(spectralRadius, regressionLambda, connectivity, leakingRate):
+    def esnEvaluation(
+        internalNodes, spectralRadius, regressionLambda, connectivity, leakingRate
+    ):
 
         hyperparameterESN = {
-            "internalNodes": 100,
+            "internalNodes": internalNodes,
             "inputScaling": 1,
             "inputShift": 0,
             "spectralRadius": spectralRadius,
@@ -499,36 +488,65 @@ def baysianOptimization():
             "seed": 1,
         }
 
-        ESN = ESNmodel(1, 1, hyperparameterESN)
-        ESN.fit(data.xTrain, data.yTrain, nForgetPoints=50)
-
-        evaluationESN = dataUtils.calculateErrorVectors(
-            data, ESN, daysAhead, silent=True, windowMode="Fixed", windowSize=0
+        ESN = ESNmodel(
+            nInputNodes=data.noTimeSeries,
+            nOutputNodes=data.noTimeSeries,
+            hyperparameter=hyperparameterESN,
         )
 
-        return np.average(evaluationESN.errorVector["RMSE"]) * -1
+        error = np.average(
+            dataUtils.calculateErrorVectors(
+                data,
+                ESN,
+                daysAhead,
+                windowMode="Expanding",
+                windowSize=0,
+                silent=True,
+                startInd=splitIndex,
+            ).errorVector["RMSE"]
+        )
+
+        del ESN
+        return error * -1
 
     pbounds = {
-        "spectralRadius": (0.1, 1),
-        "regressionLambda": (1, 1e-10),
+        "internalNodes": (50, 300),
+        "spectralRadius": (0.1, 1.2),
+        "regressionLambda": (0.001, 1e-12),
         "connectivity": (0.01, 0.1),
         "leakingRate": (0, 0.2),
     }
 
-    # dataUtils.limitCPU(100)
+    # dataUtils.limitCPU(200)
     optimizer = BayesianOptimization(f=esnEvaluation, pbounds=pbounds, random_state=1)
 
-    optimizer.maximize(init_points=50, n_iter=50)
+    optimizer.maximize(init_points=1000, n_iter=1000)
     print(optimizer.max)
 
     # {'target': -5.107364346276386e-05, 'params': {'connectivity': 0.25, 'leakingRate': 0.3045764247831867, 'regressionLambda': 0.03349326637933621, 'spectralRadius': 0.28370282580070894}}
     # 200 {'target': -5.817736792645783e-05, 'params': {'connectivity': 0.39209320009591453, 'leakingRate': 0.027453634574218677, 'regressionLambda': 0.018121378307801052, 'spectralRadius': 0.11798213612570352}}
     # 400 {'target': -5.766103436439476e-05, 'params': {'connectivity': 0.02351810808542145, 'leakingRate': 0.10729748881666834, 'regressionLambda': 0.05968872229967288, 'spectralRadius': 0.1932189099820555}}
     # 100 {'target': -5.342171818354836e-05, 'params': {'connectivity': 0.017684561647952367, 'leakingRate': 0.14181898970022982, 'regressionLambda': 1.0, 'spectralRadius': 0.11527163386472704}}
-
-
+    #
+    # Multivariate
+    # {'target': -0.008708270035450504,
+    # 'params': {'connectivity': 0.025835148873894348, 'internalNodes': 72.03451490347274, 'leakingRate': 0.03648895092077236, 'regressionLambda': 1.0, 'spectralRadius': 0.9995766070981673}}
+    # 'params': {'connectivity': 0.04772750629629654, 'internalNodes': 557.6190153055048, 'leakingRate': 0.04089044994630349, 'regressionLambda': 0.12188256360993266, 'spectralRadius': 0.12464883387813355}}
+    # In Sample 20/20
+    # {'target': -1.2637431314970473e-06, 'params': {'connectivity': 0.02488187774052395, 'internalNodes': 189.1262870594051, 'leakingRate': 0.06955317194910131, 'regressionLambda': 0.2491878968645953, 'spectralRadius': 0.7533981868154063}}
+    # {'target': -1.2589387144155041e-06, 'params': {'connectivity': 0.030967684645691843, 'internalNodes': 171.06577934281688, 'leakingRate': 0.07757212881283436, 'regressionLambda': 0.13645814544143486, 'spectralRadius': 0.7724094784634662}}
+    # {'target': -1.2178894471454817e-06, 'params': {'connectivity': 0.054962575361099754, 'internalNodes': 232.14641699364907, 'leakingRate': 0.0416388876817583, 'regressionLambda': 0.007519664416475726, 'spectralRadius': 0.24258359374681834}}
+    """
+        esnParameterSetInSample = {
+        "internalNodes": (220, 250, 300),
+        "spectralRadius": (0.65, 0.6, 0.7),
+        "regressionLambda": (0.0005, 0.0005, 0.0005),
+        "connectivity": (0.045, 0.04, 0.03),
+        "leakingRate": (0.05, 0.05, 0.05),
+    }
+    """
 if __name__ == "__main__":
     # pass
-    baysianOptimization()
+    bayesianOptimization()
     # searchOptimalParamters()
     # evaluateESN()

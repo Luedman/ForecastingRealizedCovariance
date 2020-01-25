@@ -15,6 +15,7 @@ class HARmodel:
 
         self.fitted = False
         self.modelType = "HAR"
+        self.modelName = "HAR"
 
     def fit(self, dataHAR, silent=True):
 
@@ -51,7 +52,7 @@ class HARmodel:
 
         def recursiveForecast(forecast, backlog):
 
-            dataHAR = data.createHARDataSet(backlog[-60:])
+            dataHAR = data.createHARDataSet(backlog[-200:])
 
             X = sm.add_constant(
                 np.concatenate(

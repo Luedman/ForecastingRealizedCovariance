@@ -1,3 +1,7 @@
+# Code Appendix
+# Masterthesis: Forecasting Realized Covariance with LSTM and Echo State Networks
+# Author: Lukas Schreiner, 2020
+
 import numpy as np
 import pandas as pd
 
@@ -32,6 +36,7 @@ class Data:
         self.splitIndex = self.scaledTimeSeries.shape[0] - self.maxLookBack
 
     def createLSTMDataSet(self, lookBack):
+        # Convert the data in a form such that LSTMs can handle it
 
         # Ensure that all models start at the same datapoint
         if self.maxLookBack < lookBack:
@@ -69,6 +74,7 @@ class Data:
         return
 
     def createHARDataSet(self, timeSeriesInput=None):
+        # Convert the data in a form such that HAR can handle it
 
         if timeSeriesInput is not None:
             timeSeriesData = timeSeriesInput
@@ -140,10 +146,10 @@ class Data:
         ]
 
     def xTest(self):
-        return self.scaledTimeSeries[self.splitIndex - 1 : -1]
+        return self.scaledTimeSeries[self.splitIndex - 1 + self.maxLookBack : -1]
 
     def yTest(self):
-        return self.scaledTimeSeries[self.splitIndex + 1 :]
+        return self.scaledTimeSeries[self.splitIndex + 1 + self.maxLookBack :]
 
     def xTrainLSTM(self):
         return self.xLSTM[self.startPointIndex : self.splitIndex]
@@ -174,8 +180,14 @@ class Data:
 
 class ErrorMetrics:
     def __init__(
-        self, errorVectors, errorMatrices, modelName="NA", modelType="NA", testSetSize=0,
-        oneDayAheadError = []):
+        self,
+        errorVectors,
+        errorMatrices,
+        modelName="NA",
+        modelType="NA",
+        testSetSize=0,
+        oneDayAheadError=[],
+    ):
 
         self.errorVector = errorVectors
         self.errorMatrix = errorMatrices
@@ -186,6 +198,7 @@ class ErrorMetrics:
 
 
 def createVarianceVector(data, assetList, dateIndex):
+    # Create a covariance vector
 
     assetList = list(set(assetList))
     assetList.sort()
@@ -203,6 +216,7 @@ def createVarianceVector(data, assetList, dateIndex):
 
 
 def covMatFromVector(varianceVector, noAssets):
+    # Convert a covariance matrix from a flattend matrix 
 
     covarianceMatrix = np.zeros((noAssets, noAssets))
     covarianceMatrix.T[np.tril_indices(noAssets, 0)] = varianceVector
@@ -214,6 +228,7 @@ def covMatFromVector(varianceVector, noAssets):
 
 
 def varVectorFromCovMat(covarianceMatrix):
+    # Flatten a covariance matrix to a vector
 
     assert covarianceMatrix.shape[0] == covarianceMatrix.shape[1]
 
@@ -221,51 +236,6 @@ def varVectorFromCovMat(covarianceMatrix):
     varianceVector = covarianceMatrix[ilower]
 
     return varianceVector
-
-
-def dataPrecprocessingOxfordMan(path, fileName, rawData=None):
-
-    if rawData == None:
-        rawData = pd.read_csv(path + fileName, skiprows=1, sep="\,", engine="python")
-    rawData.columns = rawData.columns.str.replace('"', "")
-    rawData.head()
-    rawData["Dates"] = pd.to_datetime(rawData["Dates"], format="%Y%m%d").dt.date
-    rawData = rawData.set_index("Dates")
-
-    preprocessedData = rawData[["DJI_rv", "FTSE_rv", "GDAXI_rv", "N225_rv", "EUR_rv"]]
-
-    preprocessedData.columns = preprocessedData.columns.str.replace("_rv", "")
-
-    preprocessedData = preprocessedData.interpolate(limit=3).dropna()
-
-    for i in range(0, len(preprocessedData.columns)):
-        preprocessedData["Log" + preprocessedData.columns[i]] = np.log(
-            preprocessedData[preprocessedData.columns[i]]
-        )
-
-    return preprocessedData
-
-
-def loadScaleDataOxfordMan(assetList):
-
-    path = "./Data/"
-    fileName = "realized.library.0.1.csv"
-
-    preprocessedData = dataPrecprocessingOxfordMan(path, fileName)
-
-    timeSeries = np.zeros(
-        np.array(preprocessedData["Log" + assetList[0]]).reshape(-1, 1).shape
-    )
-    for asset in assetList:
-        timeSeries = np.hstack(
-            (timeSeries, np.array(preprocessedData["Log" + asset]).reshape(-1, 1))
-        )
-    timeSeries = timeSeries[:, 1:]
-
-    scaler = MinMaxScaler(feature_range=(0.0, 1))
-    scaledTimeSeries = scaler.fit_transform(timeSeries)
-
-    return Data(scaledTimeSeries, scaler, assetList, "OxfordMan")
 
 
 def loadScaleDataMultivariate(
@@ -324,26 +294,12 @@ def loadScaleDataMultivariate(
 def calculateErrorVectors(
     data, model, forecastHorizon, windowMode, windowSize=None, silent=True, startInd=25
 ):
+    # Calculate the forecasting errors
 
     if model.modelType == "LSTM":
         data.createLSTMDataSet(model.lookBack)
 
-    # When using multiprocessing, limit CPU Usage depending of model Type
-    if current_process().name is not "MainProcess":
-        if model.modelType == "LSTM":
-            limitCPU(200)
-        elif model.modelType == "ESN":
-            limitCPU(200)
-        elif model.modelType == "HAR":
-            limitCPU(20)
-
     finalInd = data.scaledTimeSeries.shape[0] - forecastHorizon - data.maxLookBack
-    # finalInd = data.scaledTimeSeries.shape[0] - 31
-    assert windowMode.upper() in [
-        "EXPANDING",
-        "ROLLING",
-        "FIXED",
-    ], "Window Mode not recognized"
 
     def modelForecast(model, index):
 
@@ -376,12 +332,14 @@ def calculateErrorVectors(
 
         return actual, forecast
 
-    errorTypesList = ["RMSE", "QLIK" ,"L1Norm"]
+    errorTypesList = ["RMSE"]
     errorMatrices = {"RMSE": [], "QLIK": [], "L1Norm": []}
     errorOneDay = {"RMSE": [], "QLIK": [], "L1Norm": []}
     avgErrorVectors = dict.fromkeys(errorTypesList)
 
     def calculateForecastingError(errorType, actual, forecast):
+        # Calculate the forecasting errors
+
         def RMSE(i):
             return np.matmul(
                 (actual[i : i + 1].flatten() - forecast[i : i + 1].flatten()),
@@ -389,10 +347,10 @@ def calculateErrorVectors(
             )
 
         def QLIK(i):
-            (sign, logdet) = np.linalg.slogdet(forecast[i]*10000)
+            (sign, logdet) = np.linalg.slogdet(forecast[i] * 10000)
 
-            result =  logdet + np.trace(
-                np.matmul(np.linalg.inv(forecast[i]*10000), actual[i]*10000)
+            result = logdet + np.trace(
+                np.matmul(np.linalg.inv(forecast[i] * 10000), actual[i] * 10000)
             )
             return result
 
@@ -406,7 +364,10 @@ def calculateErrorVectors(
             except:
                 print("Error when calculating" + errorType)
 
-        return np.clip(errorVector[1:], a_min=None, a_max=1).reshape(-1, 1), errorVector[1]
+        return (
+            np.clip(errorVector[1:], a_min=None, a_max=1).reshape(-1, 1),
+            errorVector[1],
+        )
 
     for index in range(startInd, finalInd):
 
@@ -422,17 +383,21 @@ def calculateErrorVectors(
         actual, forecast = modelForecast(model, index)
 
         for errorType in errorTypesList:
-            oneDayError, errorVector = calculateForecastingError(errorType, actual, forecast)
+            oneDayError, errorVector = calculateForecastingError(
+                errorType, actual, forecast
+            )
             errorMatrices[errorType].append(oneDayError)
             errorOneDay[errorType].append(errorVector)
 
     avgErrorVectors["RMSE"] = np.sqrt(errorMatrices["RMSE"])
     for errorType in errorTypesList:
         avgErrorVectors[errorType] = np.mean(
-            np.concatenate(errorMatrices[errorType], axis=1), axis=1, keepdims=True)
+            np.concatenate(errorMatrices[errorType], axis=1), axis=1, keepdims=True
+        )
 
-        # Debug Function
+        
         def showForecast(errorType):
+            # Debug Function
 
             avgErrorVector = avgErrorVectors[errorType]
             errorMatrix = errorMatrices[errorType]
@@ -457,11 +422,12 @@ def calculateErrorVectors(
         model.modelName,
         model.modelType,
         (finalInd - startInd + forecastHorizon),
-        errorOneDay
+        errorOneDay,
     )
 
 
 def limitCPU(cpuLimit):
+    # Limit CPU usage to protect hardware
 
     try:
         limitCommand = "cpulimit --pid " + str(getpid()) + " --limit " + str(cpuLimit)

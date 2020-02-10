@@ -1,4 +1,10 @@
-# tensorboard --logdir /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/NewCode --host=127.0.0.1
+# Code Appendix
+# Masterthesis: Forecasting Realized Covariance with LSTM and Echo State Networks
+# Author: Lukas Schreiner, 2020
+#
+# Hochreiter, Sepp and Schmidhuber, Jürgen, "Long short-term memory", 
+# Neural computation 9, 8 (1997), pp. 1735--1780.
+
 from tensorflow import __version__ as tfVersion
 import dataUtils
 import numpy as np
@@ -18,7 +24,7 @@ from tensorflow.keras.layers import (
     Flatten,
     Conv1D,
     MaxPooling1D,
-    ConvLSTM2D
+    ConvLSTM2D,
 )
 from tensorflow.compat.v2.keras.layers import Bidirectional
 from tensorflow.compat.v1.keras.layers import CuDNNLSTM
@@ -27,7 +33,7 @@ from tensorflow.keras.callbacks import (
     Callback,
     EarlyStopping,
     ReduceLROnPlateau,
-    LearningRateScheduler
+    LearningRateScheduler,
 )
 from tensorflow.keras.regularizers import l1
 from tensorflow.compat.v1 import disable_eager_execution
@@ -59,19 +65,20 @@ errorLSTM = {}
 
 class LSTMmodel:
     def __init__(
-            self,
-            forecastHorizon=1,
-            lookBack=32,
-            architecture=[32],
-            dropout=0.0,
-            regularization=0.0,
-            loadPath=None,
-            bidirectional=True,
-            convInputLayer=False,
-            modelName="LSTM",
-            kernelSize=1,
-            filters=5,
-            poolSize=2):
+        self,
+        forecastHorizon=1,
+        lookBack=32,
+        architecture=[32],
+        dropout=0.0,
+        regularization=0.0,
+        loadPath=None,
+        bidirectional=True,
+        convInputLayer=False,
+        modelName="LSTM",
+        kernelSize=1,
+        filters=5,
+        poolSize=2,
+    ):
 
         np.random.seed(1)
         self.modelType = "LSTM"
@@ -100,12 +107,11 @@ class LSTMmodel:
             except:
                 self.noTimeSeries = self.model.layers[0].input_shape[2]
 
-
             for layer in self.model.layers:
                 if hasattr(layer, "rate"):
                     self.dropout = layer.rate
 
-            if loadPath.endswith('.h5'):
+            if loadPath.endswith(".h5"):
                 self.modelName = loadPath[9:-3]
 
             print("Model Loaded")
@@ -117,14 +123,17 @@ class LSTMmodel:
 
         self.noTimeSeries = noTimeSeries
         xTensor = inputTensor = Input(
-            shape=(self.lookBack, self.noTimeSeries), batch_size=None)
+            shape=(self.lookBack, self.noTimeSeries), batch_size=None
+        )
 
         if self.convInputLayer is True:
-            xTensor = Conv1D(filters=self.filters,
-                             kernel_size=self.kernelSize,
-                             activation="relu",
-                             padding='causal',
-                             input_shape=(self.lookBack, self.noTimeSeries))(xTensor)
+            xTensor = Conv1D(
+                filters=self.filters,
+                kernel_size=self.kernelSize,
+                activation="relu",
+                padding="causal",
+                input_shape=(self.lookBack, self.noTimeSeries),
+            )(xTensor)
             xTensor = MaxPooling1D(pool_size=self.poolSize)(xTensor)
             xTensor = TimeDistributed(Flatten())(xTensor)
 
@@ -162,8 +171,7 @@ class LSTMmodel:
 
         for i in range(0, len(self.architecture) - 1):
             xTensor = Dropout(self.dropout)(xTensor)
-            addedLSTMCell = LSTMCell(
-                self.architecture[i], return_sequences=True)
+            addedLSTMCell = LSTMCell(self.architecture[i], return_sequences=True)
             xTensor = addedLSTMCell(xTensor)
 
         xTensor = Dropout(self.dropout)(xTensor)
@@ -174,20 +182,11 @@ class LSTMmodel:
 
         self.model = Model(inputTensor, xTensor)
 
-    def train(
-        self,
-        epochs,
-        data,
-        learningRate=0.00001,
-        verbose=0,
-        saveModel=True,
-    ):
+    def train(self, epochs, data, learningRate=0.00001, verbose=0, saveModel=True):
 
         # Trains the model and logs the progress of the training process
 
-        self.model.compile(
-            loss="mse", optimizer=Adam(lr=learningRate, clipvalue=0.5)
-        )
+        self.model.compile(loss="mse", optimizer=Adam(lr=learningRate, clipvalue=0.5))
 
         tensorboard = TensorBoard(
             log_dir="./log/" + self.modelName,
@@ -248,9 +247,9 @@ class LSTMmodel:
             self.model.save(saveModelPath + self.modelName + "+LSTM.h5")
 
         elif windowMode.upper() in ["ROLLING", "EXPANDING"]:
-            if presentIndex - self.batchSize*2 > 0:
-                start_index = presentIndex - self.batchSize*2 
-            else: 
+            if presentIndex - self.batchSize * 2 > 0:
+                start_index = presentIndex - self.batchSize * 2
+            else:
                 start_index = 0
 
             data.splitData(presentIndex, start_index)
@@ -263,7 +262,7 @@ class LSTMmodel:
                 callbacks=[overfitCallback2, resetLearningRate],
             )
 
-            self.trainingLossEvaluation.append(history.history['loss'][-1])
+            self.trainingLossEvaluation.append(history.history["loss"][-1])
             self.model.save(saveModelPath + self.modelName + "_end.h5")
 
         elif windowMode.upper() == "FIXED":
@@ -273,8 +272,8 @@ class LSTMmodel:
 
             backlog = np.concatenate(
                 [
-                    data.xTrainLSTM()[-1:, forecasts.shape[1]:],
-                    forecasts[:, -self.lookBack:],
+                    data.xTrainLSTM()[-1:, forecasts.shape[1] :],
+                    forecasts[:, -self.lookBack :],
                 ],
                 axis=1,
             )
@@ -292,8 +291,7 @@ class LSTMmodel:
                 else forecasts[0]
             )
 
-        initForecast = np.expand_dims(
-            np.zeros((1, data.noTimeSeries)), axis=0)[:, 1:]
+        initForecast = np.expand_dims(np.zeros((1, data.noTimeSeries)), axis=0)[:, 1:]
         forecast = recursiveMultipleDaysAheadForecast(1, initForecast)
         actual = data.yTestLSTM()[:forecastHorizon]
 
@@ -327,7 +325,7 @@ def searchOptimalParamters(dataPath="./Data/", gpuOptmized=True):
     convInputLayer = [True]
     kernelSize = [4, 6, 8, 10]
     noFilters = [4, 8, 15, 20, 30]
-    poolSize = [2,4,6]
+    poolSize = [2, 4, 6]
 
     hyperParameterSpace = list(
         cartProduct(
@@ -340,7 +338,7 @@ def searchOptimalParamters(dataPath="./Data/", gpuOptmized=True):
             convInputLayer,
             kernelSize,
             noFilters,
-            poolSize
+            poolSize,
         )
     )
 
@@ -364,7 +362,7 @@ def searchOptimalParamters(dataPath="./Data/", gpuOptmized=True):
             "Regularization",
             "Kernel Size",
             "No Filters",
-            "Pooling Size"
+            "Pooling Size",
         ]
     )
 
@@ -373,7 +371,7 @@ def searchOptimalParamters(dataPath="./Data/", gpuOptmized=True):
     for _ in range(totalIterations):
 
         if exists(saveLogPath):
-            trainingLog = pd.read_csv(saveLogPath, sep=',', index_col=[0])
+            trainingLog = pd.read_csv(saveLogPath, sep=",", index_col=[0])
 
         idx = len(trainingLog)
 
@@ -404,18 +402,12 @@ def searchOptimalParamters(dataPath="./Data/", gpuOptmized=True):
             convInputLayer=convInputLayer,
             kernelSize=kernelSize,
             filters=filters,
-            poolSize=poolSize
+            poolSize=poolSize,
         )
 
-        testLSTM.createModel(gpuOptmized=gpuOptmized,
-                             noTimeSeries=data.noTimeSeries)
+        testLSTM.createModel(gpuOptmized=gpuOptmized, noTimeSeries=data.noTimeSeries)
 
-        trainingHistory = testLSTM.train(
-            5000,
-            data,
-            saveModel=False,
-            learningRate=0.1,
-        )
+        trainingHistory = testLSTM.train(5000, data, saveModel=False, learningRate=0.1)
 
         validationError = trainingHistory.history["val_loss"][-1]
         trainingError = trainingHistory.history["loss"][-1]
@@ -430,11 +422,7 @@ def searchOptimalParamters(dataPath="./Data/", gpuOptmized=True):
             + "  Epochs: "
             + str(noEpochs)
         )
-        print(
-            str(architecture)
-            + "  "
-            + str(np.round(validationError, 4))
-        )
+        print(str(architecture) + "  " + str(np.round(validationError, 4)))
 
         trainingLog.loc[idx] = {
             "Time": strftime("%Y-%m-%d %H:%M:%S", localtime()),
@@ -448,10 +436,10 @@ def searchOptimalParamters(dataPath="./Data/", gpuOptmized=True):
             "Regularization": regularization,
             "Kernel Size": kernelSize,
             "No Filters": filters,
-            "Pooling Size": poolSize
+            "Pooling Size": poolSize,
         }
 
-        trainingLog.to_csv(saveLogPath, sep=',')
+        trainingLog.to_csv(saveLogPath, sep=",")
 
         if validationError < validationErrorMin:
             validationErrorMin = validationError
@@ -473,7 +461,7 @@ overfitCallback = EarlyStopping(monitor="val_loss", min_delta=0, patience=300)
 # Early Stopping for rolling/expanding window evaluation
 overfitCallback2 = EarlyStopping(monitor="loss", min_delta=0, patience=20)
 
-# Reduce learning rate when a validation loss has stopped improving.
+# Reduce learning rate when a validation loss has stopped improving
 reduceLearningRate = ReduceLROnPlateau(
     monitor="val_loss",
     factor=0.5,
@@ -487,6 +475,5 @@ reduceLearningRate = ReduceLROnPlateau(
 
 def resetlr(epoch):
     return 0.00000001
-
 
 resetLearningRate = LearningRateScheduler(resetlr)

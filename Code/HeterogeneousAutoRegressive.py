@@ -1,12 +1,17 @@
-import statsmodels.api as sm
-import numpy as np
-from pandas import DataFrame
-import dataUtils
+# Code Appendix
+# Masterthesis: Forecasting Realized Covariance with LSTM and Echo State Networks
+# Author: Lukas Schreiner, 2020
+#
+# Corsi, Fulvio, "A simple approximate long-memory model of realized volatility", 
+# Journal of Financial Econometrics 7, 2 (2009), pp. 174--196.
 
+import dataUtils
+import numpy as np
+import statsmodels.api as sm
+from pandas import DataFrame
 from matplotlib import pyplot as plt
 
 import warnings
-
 warnings.filterwarnings("ignore")
 
 
@@ -37,7 +42,7 @@ class HARmodel:
     def multiStepAheadForecast(
         self, data, forecastHorizon, index, windowMode, windowSize=0
     ):
-
+        # Refit the HAR-RV and create a multi step ahead forecast
         if windowMode.upper() == "EXPANDING":
             data.splitData(index, startPointIndex=0)
             self.fit(data.dataHARtrain())

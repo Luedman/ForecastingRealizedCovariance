@@ -1,0 +1,5890 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\numberwithin{equation}{section}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement H
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine biblatex-natbib
+\cite_engine_type authoryear
+\biblio_style plain
+\biblatex_bibstyle authoryear
+\biblatex_citestyle authoryear
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+Beeing the key parameter in many models for derivative pricing and risk,
+ 
+\shape italic
+volatility
+\shape default
+ became a central measure with a broad range of applications in today's
+ finacial markets.
+ Consequently, it's autocorrleation gave rise to a rich body of literature
+ on modelling the structure and deriving forecasts for the future.
+ Conventional GARCH models 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "bollerslev1986generalized"
+literal "false"
+
+\end_inset
+
+ and short term stochsatic volatility models, however, fail to capture certain
+ empirical characterics of return data such as the long lagged autocorrelation
+ and leptukurtic empirical distributions of the returns.
+ This gave rise to a variety of more sophisticated models such as the the
+ ARFIMA 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "granger1980introduction"
+literal "false"
+
+\end_inset
+
+ on realized volatility.
+ By including a fractional difference operator, those models are able to
+ capture long term depencies yet they are hard to estimate and lack a clear
+ economic interpretation.
+\end_layout
+
+\begin_layout Standard
+This thesis aims to asses two approaches from the machine learning domain
+ to adress this problem, namly 
+\shape italic
+Echo State Networks
+\shape default
+ 
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "ESN"
+description "Echo State Network"
+literal "false"
+
+\end_inset
+
+ and 
+\shape italic
+Long Short Term Memory
+\shape default
+ neural networks 
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "LSTM"
+description "Long Short Term Memory Neural Network"
+literal "false"
+
+\end_inset
+
+.
+ Both will be trained on univariate and multivariate time series data and
+ then compared to the HAR-RV 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "corsi2009simple"
+literal "false"
+
+\end_inset
+
+ as benchmark.
+\end_layout
+
+\begin_layout Standard
+The structure of this thesis is as follows.
+ The second section will give a theoretical introduction followed the literature
+ review.
+ The subsequent chapter will then describe methodology and data before presentin
+g the empirical findings and the closing conclunding remarks.
+ The focus will thereby be on the maschine learning models and their forecasting
+ abilities in different scenarios.
+\end_layout
+
+\begin_layout Standard
+correlation
+\end_layout
+
+\begin_layout Standard
+covariances of financial assets entails its unobservability.
+\end_layout
+
+\begin_layout Standard
+(move sources)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Theoretical Introduction
+\end_layout
+
+\begin_layout Subsection
+Forecasting Realized Volatility
+\end_layout
+
+\begin_layout Standard
+(Intro Text)
+\end_layout
+
+\begin_layout Subsection
+Feedforward Neural Networks
+\end_layout
+
+\begin_layout Standard
+The key priciples of Artificial neural networks (ANN)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "ANN"
+description "Artificial Neural Network"
+literal "false"
+
+\end_inset
+
+ date back to the 40s where 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "mcculloch1943logical"
+literal "false"
+
+\end_inset
+
+ published their logical calculus for nervous activity stating that for
+ 
+\begin_inset Quotes eld
+\end_inset
+
+any logical expression satisfying certain conditions, one can find a net
+ behaving in the fashion it describes
+\begin_inset Quotes erd
+\end_inset
+
+.
+ A few years later Donald Hebb published his widely renowned neuroscientific
+ Hebbian Theory in which he describes the ability of neurons to learn through
+ strengthening the connection between them 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "hebb1949organization"
+literal "false"
+
+\end_inset
+
+.
+ For that reason ANNs are also sometimes referred as a way of Hebbian learning.
+\end_layout
+
+\begin_layout Standard
+Especially Feedforward Neural Networks (FNN) 
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "FNN"
+description "Feed Forward Neural Network"
+literal "false"
+
+\end_inset
+
+ are one of the most commonly used yet simplest ANN architectures.
+ They usually exhibit a layered structure of activation functions where
+ the information flows from the input layer to the subsequent hidden and
+ output layers.
+ Particularly multilayer perceptrons (MLP)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "MLP"
+description "Multilayer Perceptron"
+literal "false"
+
+\end_inset
+
+ with nonlinear activation functions are used for a wide rage of applications.
+\end_layout
+
+\begin_layout Standard
+The reason why neural networks are so powerful is their ability to fit functions
+ of higher dimensions and consequently map much more complex relationships
+ between input and output vectors than linear models.
+ In order to achieve that, a multidimensional error function has to be minimized.
+ After feeding the training examples of one training iteration through the
+ network (forward pass), the average error is calculated and passed back
+ into the network (backward pass).
+ To do so, the loss function calculates the average loss over all training
+ examples by comparing the results of the output layer to the true labels.
+ Starting at the output layer, the purpose of back-propagation now is to
+ find the partial derivatives of the loss function w.r.t.
+ to each individual weight in that layer.
+ Then, the algorithm iterates back to the input layer and tries to calculate
+ the partial derivatives of the activation functions in the hidden layers.
+ Since neural networks are essentially huge nested functions, back-propagation
+ can make use of the chain rule in order to derive those.
+ That way, it is possible to calculate partial derivatives for each weight
+ even for very deep neural networks.
+ This structure also allows to vectorize forward passes and backward propagation
+ which is useful for notation and algorithmic implementation.
+ Once those derivatives are calculated, gradient descent updates each weight
+ by subtracting the partial derivative times the learning rate from the
+ respective weight.
+ Every weight update now shifts the weights more to a value where the loss
+ function in minimized 
+\begin_inset CommandInset citation
+LatexCommand citep
+before "see"
+key "bishop1995neural"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+Architecture
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Feed Forward Neural Network"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ shows the general architecture of a FNN or MLP.
+ The elements 
+\begin_inset Formula $x^{(i)}\in\mathbb{R}^{n_{x}}$
+\end_inset
+
+ denote the input vector for training example 
+\begin_inset Formula $i$
+\end_inset
+
+.
+ This results in input matrix 
+\begin_inset Formula $X\in\mathbb{R}^{n_{x}\times I}$
+\end_inset
+
+ with dimensions 
+\begin_inset Formula $n_{x}$
+\end_inset
+
+ as input size of the network and 
+\begin_inset Formula $I$
+\end_inset
+
+ the total number of training examples.
+ 
+\begin_inset Formula $a_{n}^{[l]}$
+\end_inset
+
+ denotes the 
+\begin_inset Formula $n^{th}$
+\end_inset
+
+ activation in Layer 
+\begin_inset Formula $l$
+\end_inset
+
+ and 
+\begin_inset Formula $\widehat{y}_{n}^{(i)}$
+\end_inset
+
+ represents the prediction for label 
+\begin_inset Formula $n$
+\end_inset
+
+ and example 
+\begin_inset Formula $i$
+\end_inset
+
+.
+ The vector 
+\begin_inset Formula $b^{[l]}\in\mathbb{R}^{N^{[l]}\times1}$
+\end_inset
+
+ contains the bias constants 
+\begin_inset Formula $b_{n}^{[l]}$
+\end_inset
+
+ for layer 
+\begin_inset Formula $l$
+\end_inset
+
+.
+ All layers are connected via a weight matrices 
+\begin_inset Formula $W^{[l]}\in\mathbb{R}^{N^{[l-1]}\times N^{[l]}}$
+\end_inset
+
+ that contain the internode weights 
+\begin_inset Formula $w_{n,j}^{[l]}$
+\end_inset
+
+ to connect node 
+\begin_inset Formula $i$
+\end_inset
+
+ from the preceding layer to node 
+\begin_inset Formula $j$
+\end_inset
+
+ of the subsequent one.
+ 
+\begin_inset Formula $N^{[l]}$
+\end_inset
+
+ is the number of nodes per layer and 
+\begin_inset Formula $M$
+\end_inset
+
+ denotes the number of layers in the network.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/FNN.png
+	scale 50
+	rotateOrigin centerBottom
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Feed Forward Neural Network
+\begin_inset CommandInset label
+LatexCommand label
+name "Feed Forward Neural Network"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The activations for a given layer are calculated by multiplying the weights
+ with either the input vector (in the first layer) or the output of the
+ previous layer (
+\begin_inset Formula $a^{[l-1]}$
+\end_inset
+
+), whereby the activation function of layer 
+\begin_inset Formula $l$
+\end_inset
+
+ is denoted by 
+\begin_inset Formula $g^{[l]}$
+\end_inset
+
+ .
+ The latter is a threshold function that that has an output of (close to)
+ zero if the input values a low or and an high output if the weighted sum
+ of the input values is high.
+ Initially, sigmoid or logistic functions were widely used (see equation
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:Sigmoid"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+) but in todays applications, Rectifier Linear Units (ReLU
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "ReLU"
+description "Rectifier Linear Unit"
+literal "false"
+
+\end_inset
+
+, see euquation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: ReLU"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+) became increasly popular since their mathematical properties are better
+ suited for the gradient descent algorithm as demonstrated below.
+\end_layout
+
+\begin_layout Standard
+Sigmoid
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+g(z)=sig(z)=\frac{1}{1+e^{-z}}\label{eq:Sigmoid}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dg(z)}{dz}=sig(z)(1-sig(z))\label{eq: Sigmoid Derivative}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ReLU
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+g(z)=\max(0,z)\label{eq: ReLU}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dg(z)}{dz}=\begin{cases}
+0 & \textrm{if }z\leq0\\
+1 & \text{otherwise}
+\end{cases}\label{eq: ReLU Derivative}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Back-propagation
+\end_layout
+
+\begin_layout Standard
+In order to make a prediction 
+\begin_inset Formula $\hat{y}^{(i)}$
+\end_inset
+
+, an input vector 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $x^{(i)}$
+\end_inset
+
+ is passed through the network with a forward pass like described in algorithm
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Feed Forward Pass"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ The resulting prediction error is then passed then back in the network
+ in order to optimize the weights and resulting prediction error.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Formula $a^{[0]}=x^{(i)}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+for 
+\begin_inset Formula $l=1,...,L$
+\end_inset
+
+ do:
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad$
+\end_inset
+
+for 
+\begin_inset Formula $n=1,...N^{[l]}$
+\end_inset
+
+ do:
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad\qquad$
+\end_inset
+
+
+\begin_inset Formula $z_{n}^{[l]}=\underset{j}{\sum}w_{n,j}^{[l]}a_{n}^{[l-1]}+b_{n}^{[l]}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad\qquad$
+\end_inset
+
+
+\begin_inset Formula $a_{n}^{[l]}=g^{[l]}(z_{n}^{[l]})$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad$
+\end_inset
+
+end for
+\end_layout
+
+\begin_layout Plain Layout
+end for
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\hat{y_{n}}^{(i)}=a_{n}^{[L]}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Feed Forward Pass
+\begin_inset CommandInset label
+LatexCommand label
+name "Feed Forward Pass"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The inner loop calculates the respective activation per node and the outer
+ one repeats that procedure for every layer, starting with the input values
+ of neural network and iterating to the output layer.
+ The error function 
+\begin_inset Formula $\mathcal{L}$
+\end_inset
+
+ typically is a mean squared error (MSE
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "MSE"
+description "Mean Squared Error"
+literal "false"
+
+\end_inset
+
+) or of similar kind.
+ The total loss of the test and training examples will be calculated as
+ average over all losses (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: Loss Functuion"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ 
+\begin_inset Formula 
+\begin{equation}
+J=\frac{1}{m}\stackrel[i=1]{m}{\sum}\mathcal{L}_{i}(y^{(i)},\hat{y}^{(i)})\label{eq: Loss Functuion}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Like many statistical models, neural networks are fitted by minimizing the
+ error function.
+ Unlike many regression methods however, one cannot set the derivative of
+ the loss function to zero and derive an solution for the optimal weights
+ analytically but instead one has to rely on numerical methods such as gradient
+ descent.
+ Like mentioned above, the nested structure of neural networks allows to
+ derive the derivatives with respect to the weights by multiplying the correspon
+ding partial derivatives iterating the computational graph backwards.
+ This procedure is called back-propagation 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "rumelhart1988learning"
+literal "false"
+
+\end_inset
+
+.
+ So for the output layer 
+\begin_inset Formula $L$
+\end_inset
+
+, the gradient is derived as follows: 
+\begin_inset Formula 
+\begin{equation}
+\frac{dJ}{dw_{n,j}^{[L]}}=\frac{dJ}{dz_{n}^{[L]}}\frac{dz_{n}^{[L]}}{dw_{n,j}}\label{eq:dJ/dw output layer}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with
+\end_layout
+
+\begin_layout Standard
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula 
+\begin{align}
+\frac{dJ}{dz_{n}^{[L]}} & =\frac{dJ}{d\hat{y}}\frac{d\hat{y}}{dz_{n}^{[L]}}=\frac{dJ}{d\hat{y}}\frac{dg^{[L]}(z^{[L]})}{dz_{n}^{[L]}}=\delta_{n}^{*}\label{eq: dJ/dz}\\
+\frac{dz^{[L]}}{dw_{n,j}^{[L]}} & =a^{[L-1]}\label{eq:dz/dw}
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+plugging 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dJ/dz"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:dz/dw"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ into 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:dJ/dw output layer"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, this leads to
+\begin_inset Formula 
+\begin{equation}
+\frac{dJ}{dw_{n,j}^{[L]}}=\delta_{n}^{*}a_{n}^{[L-1]}\label{eq: gradient output layer}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Generally, the gradients of the preceding layer 
+\begin_inset Formula $L-1$
+\end_inset
+
+ are calculated by iterating the error back into the network and applying
+ the chain rule
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dJ}{dw_{n,j}^{[L-1]}}=\frac{dJ}{dz_{n}^{[L-1]}}\frac{dz_{n}^{[L-1]}}{dw_{n,j}^{[L-1]|}}\label{eq:dJ/dw preceeding layers}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\frac{dJ}{dz_{n}^{[L-1]}} & =\sum_{n}\underset{\delta_{n}^{*}}{\underbrace{\frac{dJ}{d\hat{y_{n}}}\frac{dg^{[L]}(z_{n}^{[L]})}{dz_{n}^{[L]}}}}\frac{dz_{n}^{[L]}}{dz_{n}^{[L-1]}}\label{eq: dJ/dz(L-k)}\\
+ & =\frac{dg^{[L]}(z^{[L]})}{dz^{[L]}}\sum_{n}\delta_{n}^{*}w_{n,j}^{[L-1]}\nonumber \\
+ & =\delta_{n}^{[L-k]}\nonumber \\
+\nonumber \\
+\frac{dz_{n}^{[L-1]}}{dw_{n,j}^{[L-1]}} & =a^{[L-1]}\label{eq: dz(L-K)/dw}
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+if you plug in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dJ/dz(L-k)"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dz(L-K)/dw"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ in 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:dJ/dw preceeding layers"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ you get the respective derivatives of the hidden layers
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{dJ}{dw_{n,j}^{[L-1]}}=\delta_{n}^{[L-1]}a^{[L-1]}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The derivation for the bias 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $\frac{dJ}{db_{n}^{[L-k]}}$
+\end_inset
+
+ follows the same logic and is omitted here.
+ The gradients of the deeper layers are then calculated by adding the partial
+ derivatives to equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dJ/dz(L-k)"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ For further reading see 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "goodfellow2016deep,bishop1995neural"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+Gradient Descent
+\end_layout
+
+\begin_layout Standard
+In order to minimize the error function, there are multiple approaches that
+ are based on on the gradient method by Louis Cauchy.
+ The key idea to calculate the derivative in a given point and then move
+ the point towards a direction opposite to the direction of the slope.
+ The step size or learning rate 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ is a hyper-parameter that is manually choosen.
+ Ideally, the algorithm converges to a global minimum after a sufficient
+ number of iterations and a learning rate that is small enough to avoid
+ constantly jumping over the optimum.
+ For that reason it is common procedure to use a learning rate sheduler
+ that starts with a large learning that is decreased over time.
+ For this study, the learning rate of the LSTMs depends on the training
+ error
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Keras: ReduceLROnPlateau (link)
+\end_layout
+
+\end_inset
+
+.
+ Starting with 
+\begin_inset Formula $\alpha=1\mathrm{e}{-5}$
+\end_inset
+
+, the learning rate is updated with 
+\begin_inset Formula $\alpha_{new}=\alpha_{old}*0.5$
+\end_inset
+
+ if the last 10 training iterations did not improve the test error by a
+ least 
+\begin_inset Formula $0.0001$
+\end_inset
+
+.
+ At the same time, an early stopping callback 
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Early Stopping
+\end_layout
+
+\end_inset
+
+ does ensure that training procedure is stopped if training did not improve
+ the test error for at least 300 iterations.
+ Those two methods have benefit that two hyperparamters, namely the learning
+ rate and the number of training iterations, do not require any tuning which
+ simplifies the search for the remaining ones.
+\end_layout
+
+\begin_layout Standard
+In the machine learning domain, there are mainly three types of gradient
+ descent that come with different advantages and disadvantages.
+ Stochastic gradient descent (SGD
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "SDG"
+description "Stochastic Gradient Descent"
+literal "false"
+
+\end_inset
+
+), often referred to as online learning, is among the most commonly used
+ modifications 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "kiefer1952stochastic,robbins1951stochastic"
+literal "false"
+
+\end_inset
+
+.
+ Whereas batch gradient descent iterates through the whole training set,
+ SDG calculates the error and updates the weights after each training example.
+ This may lead to faster convergence and and is less prone to get stuck
+ in local minima since the frequent updates come with increased noise.
+ Downsides are higher computational cost and and a noisy gradient signal.
+ Mini batch gradient descent tries to find the middle way by updating the
+ weights after certain number of training examples 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "bottou2010large,lecun1998efficient"
+literal "false"
+
+\end_inset
+
+.
+ Depending on the batch size the optimizer behaves either way, so performance
+ may vary depending on the problem and dataset.
+\end_layout
+
+\begin_layout Standard
+In order to break the symmetry and avoid identical weight updates, the weights
+ are randomly initialized.
+ Esepcially when using sigmoid activation functions, the initial weights
+ should be neither to small nor to large to avoid small gradients 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "lecun1998efficient"
+literal "false"
+
+\end_inset
+
+.
+ In practice, a standard normal initialization should work fine.
+ Algorithm 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "Gradient Descent"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ describes the algorithm of updating the weights of the neural network.
+ For a batch size equal to one (
+\begin_inset Formula $B=1)$
+\end_inset
+
+ the algorithm performs SGD and for a batch size equal to the training set
+ (
+\begin_inset Formula $B=I$
+\end_inset
+
+) you have batch gradient descent.
+ The number epochs is a hyper-parameter that specifies how often the the
+ procedure is repeated.
+ As dataset and model increase in size or the learning rate is decreased,
+ the number of epochs ususally needs to be increased in order to find an
+ optimium.
+ The reader may refer to 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "bengio2012practical"
+literal "false"
+
+\end_inset
+
+, who provides a practical outline about tuning the batch size and other
+ hyper parameters.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Formula $B=$
+\end_inset
+
+ batch size
+\end_layout
+
+\begin_layout Plain Layout
+Randomly initialize all 
+\begin_inset Formula $w_{n,j}^{[L-k]}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+for number of epochs do:
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+for 
+\begin_inset Formula $i,...B$
+\end_inset
+
+ do
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+calculate 
+\begin_inset Formula $J$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+for 
+\begin_inset Formula $k=L-1,....0$
+\end_inset
+
+ do:
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+Calculate 
+\begin_inset Formula $\frac{dJ}{dw_{n,j}^{[L-k]}}$
+\end_inset
+
+, for all 
+\begin_inset Formula $n,j$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $w_{n,j}^{[L-k]}:=w_{n,j}^{[L-k]}+\alpha\frac{dJ}{dw_{n,j}^{[L-k]}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\begin_inset Formula $\qquad\qquad\qquad$
+\end_inset
+
+
+\begin_inset Formula $b_{n,j}^{[L-k]}:=b_{n}^{[L-k]}+\alpha\frac{dJ}{db_{n}^{[L-k]}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+
+\begin_inset Formula $\qquad$
+\end_inset
+
+end for
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Formula $\qquad$
+\end_inset
+
+end for
+\end_layout
+
+\begin_layout Plain Layout
+end for
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Gradient Descent
+\begin_inset CommandInset label
+LatexCommand label
+name "Gradient Descent"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Whereas the batch size affects only the outer loop, there exist also numerous
+ approaches that target the inner workings of the algorithm.
+ Gradient descent with momentum 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "qian1999momentum"
+literal "false"
+
+\end_inset
+
+ uses an exponetially weighted average of the gradients to update the weights.
+ This almost always leads to faster convergence.
+ RMSprop 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "tieleman2012lecture"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "RMSprop"
+description "Root Mean Squared Prop"
+literal "false"
+
+\end_inset
+
+ is another technique that scales the gradients such that the weight updates
+ are increased towards convergence and decrease oscillation.
+ The ADAM Optimizer 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "kingma2014adam"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "ADAM"
+description "Adaptive Moment Estimation"
+literal "false"
+
+\end_inset
+
+ combines momentum and RMSprop and and combines the advantages of both approache
+s.
+ It will be used to train LSTM networks for this work as well.
+ For further optimization techniques regarding neural networks, the reader
+ may refer to 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "ruder2016overview"
+literal "false"
+
+\end_inset
+
+ for an overview.
+\end_layout
+
+\begin_layout Subsection
+Recurrent Neural Networks
+\end_layout
+
+\begin_layout Standard
+FNNs are well suited for fitting a mapping from an input vector to an output
+ label but when it comes to time series however, they lack the ability to
+ model dependencies through time.
+ Recurrent neural networks address this issue by feeding the output of the
+ nodes back into the network and consequently processing past input vectors
+ with subsequent ones.
+ The first versions of Recurrent Neural Networks
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "RNN"
+description "Recurrent Neural Network"
+literal "false"
+
+\end_inset
+
+were developed by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "hopfield1982neural"
+literal "false"
+
+\end_inset
+
+.
+ They exhibit an architecture that feeds the output of every node to the
+ other nodes of the same layer.
+ Later 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "elman1990finding,jordan1986attractor"
+literal "false"
+
+\end_inset
+
+ developed that idea further and introduced returning connections to the
+ node itself as well as connections to nodes in other layers in the network.
+ In some cases, the output values would pass through another layer of nodes
+ before beeing fed in again.
+ Through this artificial lag, this architecture is well suited for learning
+ sequence data and predicting time series.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/RNN.png
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Backpropagation through time
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Backpropagation-through-time"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to derive the weight updates for gradient descent, the derivatives
+ are calculated with backpropagation through time 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "werbos1990backpropagation"
+literal "false"
+
+\end_inset
+
+.
+ For this approach, the network is 'unfolded' in a sense that it is copied
+ multiple times while passing activation values to its successor (see Figure
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Backpropagation-through-time"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ Training deep recurrent networks often leads to the vanishing gradient
+ problem since the partial derivatives tend to get very small when multiplying
+ many subsequent derivatives during backpropagation (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq: dJ/dz(L-k)"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+,
+\begin_inset CommandInset citation
+LatexCommand citealt
+key "bengio1994learning"
+literal "false"
+
+\end_inset
+
+).
+ For that reason, linear activation functions such as ReLU became increasly
+ popular since their constant derivatives circumvent the vanishing gradient
+ problem and allow training much deeper networks at an increased convergence
+ speed 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "glorot2011deep,krizhevsky2012imagenet"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+LSTM and Echo State networks are both concepts that build on top of recurrent
+ neural networks.
+ LSTM replace the activation function with memory cells and ESNs use a different
+ approach for training.
+ This will be elaborated in more detail in the following sections.
+\end_layout
+
+\begin_layout Subsection
+Echo State Networks
+\end_layout
+
+\begin_layout Standard
+ESNs 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "jaeger2001echo"
+literal "false"
+
+\end_inset
+
+ and liquid state machines 
+\begin_inset CommandInset citation
+LatexCommand citep
+before "LSM,"
+key "maass2002real"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "LSM"
+description "Liquid State Maschine"
+literal "false"
+
+\end_inset
+
+ are a sub category of reservoir computing.
+ An ESN has many similarities to an RNN though the weights of the hidden
+ layers are not subject to training.
+ This creates a reservoir that acts as a complex nonlinear dynamic filter
+ which is capable of transforming the input signals with a high dimensional
+ temporal mapping.
+ As a consequence, the training process is simplified to a linear regression
+ problem yet the ability to fit a mapping function of higher dimensions
+ remains.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "schiller2003weight"
+literal "false"
+
+\end_inset
+
+ show that the resulting network structure of an RNN, which is trained with
+ the Atiya-Parlos Recurrent Learning agorithm 
+\begin_inset CommandInset citation
+LatexCommand citep
+before "APRL,"
+key "atiya2000new"
+literal "false"
+
+\end_inset
+
+
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "APRL"
+description "Atiya-Parlos Recurrent Learning"
+literal "false"
+
+\end_inset
+
+ is very similar to a dynamic reservoir with a linear output layer.
+ They further conclude that the initialization procedure has a significant
+ impact on the error and convergence to the smallest error ist not guaranteed.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/ESN.png
+	scale 40
+	rotateOrigin centerTop
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Echo State Network
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Echo-State-Network"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The follwing section will introduce an ESN with 
+\begin_inset Formula $N$
+\end_inset
+
+ reservoir Units, 
+\begin_inset Formula $K$
+\end_inset
+
+ input units and 
+\begin_inset Formula $L$
+\end_inset
+
+ output units simlar to 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "jaeger2001echo"
+literal "false"
+
+\end_inset
+
+.
+ The reservoir state 
+\begin_inset Formula $x(n)\in\mathbb{R}^{N}$
+\end_inset
+
+ is calculated as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+x(n+1)=f(Wx(n)+W^{in}u(n+1)+W^{back}y(n))\label{eq:ESN reservoir state}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $W\in\mathbb{R}^{N\times N}$
+\end_inset
+
+ is the reservoir weight matrix, 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $W^{in}\in\mathbb{R}^{N\times K}$
+\end_inset
+
+ denotes the weight matrix for input 
+\begin_inset Formula $u(n)\in\mathbb{R}^{K}$
+\end_inset
+
+ and 
+\begin_inset Formula $W^{back}\in\mathbb{R}^{N\times L}$
+\end_inset
+
+ is the optional weight matrix for output signal 
+\begin_inset Formula $y(n)\in\mathbb{R}^{L}$
+\end_inset
+
+ that goes back into the reservoir.
+ The function 
+\begin_inset Formula $f$
+\end_inset
+
+ is the element wise activation function typically is either an identity,
+ sigmoid or tanh function.
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+The subsequent element of a time series is computed by the weighted activation
+ of the concatenation of the input, reservoir state, and previous output
+ activation vectors.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+y(n+1)=f^{out}(W^{out}(\underset{z(n+1)}{\underbrace{u(n+1),x(n+1),y(n)}}))\label{eq: ESN subsequent element}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to fit output weight matrix 
+\begin_inset Formula $W^{out}\in\mathbb{R}^{L\times(K+N+L)}$
+\end_inset
+
+, the sequence of input features 
+\begin_inset Formula $u_{train}(n),...,u_{train}(n_{max})$
+\end_inset
+
+ is passed in the network.
+ This leads to a sequence of system states 
+\begin_inset Formula $z(n),...,z(n_{max})$
+\end_inset
+
+ that is stored in the state collection matrix 
+\begin_inset Formula $S\in\mathbb{R}^{n_{max}\times(K+N+L)}$
+\end_inset
+
+.
+ In case 
+\begin_inset Formula $W^{back}$
+\end_inset
+
+ is nonzero, the respective training labels are written in the output nodes
+ to calculate the reservoir state 
+\begin_inset Formula $x(n)$
+\end_inset
+
+.
+ This process is called teacher forcing (Source!).
+ The respective output values of the training set are stored in an output
+ collection matrix 
+\begin_inset Formula $D\in\mathbb{R}^{n_{max}\times L}$
+\end_inset
+
+.
+ The output weight matrix can then be found by transposing the product of
+ the pseudoinverse of 
+\begin_inset Formula $S$
+\end_inset
+
+ with 
+\begin_inset Formula $D$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+W^{out}=(S^{\dagger}D)^{T}\label{eq: ESN Output Weights}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection*
+Echo State Property
+\end_layout
+
+\begin_layout Standard
+leaking rate
+\end_layout
+
+\begin_layout Standard
+input shift/ scaling
+\end_layout
+
+\begin_layout Standard
+Grigoryeva time delay reservoir
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citep
+key "schrauwen2007overview"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Long Short Term Memory Neural Networks
+\end_layout
+
+\begin_layout Standard
+LSTMs 
+\begin_inset CommandInset citation
+LatexCommand citep
+before "LSTM,"
+key "hochreiter1997long"
+literal "false"
+
+\end_inset
+
+ belong to the family of RNNs as well where the activation functions are
+ replaced by using a system of gate functions and a cell state.
+ That way, LSTMs can effectively address the vanishing gradient problem
+ and learn dependencies in time series that lie further apart in time.
+ The core structure is similar to that of RNNs as shown in Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Backpropagation-through-time"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ just expanded by a cell state 
+\begin_inset Formula $C_{t}$
+\end_inset
+
+ that is computed and altered in parallel and passed on to the subsequent
+ cell.
+ The computational graph of an LSTM cell is shown in Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Echo-State-Network"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ The notation and figure design follows 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "olah2015understanding"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/LSTM.png
+	scale 40
+	rotateOrigin centerTop
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Long Short Term Memory Cell 
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:LSTM"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In a first step the forget gate 
+\begin_inset Formula $f_{t}$
+\end_inset
+
+ takes input data 
+\begin_inset Formula $x_{t}$
+\end_inset
+
+ and preceding cell output 
+\begin_inset Formula $h_{t-1}$
+\end_inset
+
+ and applies a sigmoid activation function.
+ The output is a number between zero and one for every number in the cell
+ state 
+\begin_inset Formula $C_{t-1}$
+\end_inset
+
+ which are then multiplied respectively.
+ Consequently, values close to zero erase information from previous cell
+ states whereas numbers close to one preserve it.
+ Like with any other neural network, the respective weight vectors 
+\begin_inset Formula $W_{gate}$
+\end_inset
+
+ and biases 
+\begin_inset Formula $b_{gate}$
+\end_inset
+
+ are subject to learning.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f_{t}=\sigma(W_{f}*[h_{t-1},x_{t}]+b_{f})\label{eq: LSTMforgetgate}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In a next step, the values for the new cell state 
+\begin_inset Formula $\widetilde{C}_{t}$
+\end_inset
+
+ are determined by a 
+\begin_inset Formula $tanh$
+\end_inset
+
+ layer and then an input gate 
+\begin_inset Formula $i_{t}$
+\end_inset
+
+ determines which values of 
+\begin_inset Formula $C_{t}$
+\end_inset
+
+ get updated.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+i_{t} & =\sigma(W_{i}[h_{t-1},x_{t}]+b_{i})\label{eq:LSTMupdate}\\
+\widetilde{C}_{t} & =tanh(W_{C}[h_{t-1},x_{t}]+b_{C})\label{eq:LSTMCellState}
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The new cell state is finally determined by
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+C_{t}=f_{t}*C_{t-1}+i_{i}*\widetilde{C}_{t}\label{eq:LSTMnewCellState}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to derive the cell output, the updated cell state is then used
+ to alter the result of the output gate 
+\begin_inset Formula $o_{t}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+o_{t} & =\sigma(W_{o}[h_{t-1},x_{t}]+b_{o})\label{eq:LSTMactivation}\\
+h_{t} & =o_{t}*tanh(C_{t})\label{eq: LSTMoutput}
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The cell state 
+\begin_inset Formula $C_{t}$
+\end_inset
+
+ and cell output 
+\begin_inset Formula $h_{t}$
+\end_inset
+
+ are then passed on the next LSTM Cell.
+ In order to derive an estimate 
+\begin_inset Formula $y_{t}$
+\end_inset
+
+, the cell outputs 
+\begin_inset Formula $h_{t}$
+\end_inset
+
+ are then put through an usual dense layer (omitted in Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:LSTM"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ Through the increased amount of parameters per cell, LSTM training is computati
+onallly quite expensive yet their effectiveness for time series modelling
+ often requires only one or very few layers in practice.
+\end_layout
+
+\begin_layout Standard
+(Dropout, L1 Regularization)
+\end_layout
+
+\begin_layout Standard
+The formal derivation shown above shows a unidirectional LSTM where the
+ cell state is soley passed forward.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "schuster1997bidirectional"
+literal "false"
+
+\end_inset
+
+, however, designed recurrent neural networks that pass a cell state into
+ both directions giving the model the ability to process not only information
+ in the past but also looking forward.
+ This techique has become very popular with LSTMs recently even though it
+ increases the number of trainable parameters per layer quite significantly.
+ In this work it will be considered as a binaray hyper-parameter named 
+\shape italic
+bidrectional
+\shape default
+.
+\end_layout
+
+\begin_layout Standard
+Whereas LSTMs are very powerful to deal with recurring structure in time,
+ convolutuional neural networks 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "fukushima1979neural,lecun2015deep"
+literal "false"
+
+\end_inset
+
+ are well suited to recognize patterns in pictures or data structured in
+ matrices in general.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "xingjian2015convolutional"
+literal "false"
+
+\end_inset
+
+ combine both ideas to develop a convolutional LSTM that has an convolutional
+ elements in the input as well as the recurring part of the LSTM cells.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "wan2019multivariate"
+literal "false"
+
+\end_inset
+
+ find that convolutional LSTMs networks are able to provide better multivariate
+ forecasts for some cases.
+ For this study, a slighter simpler version of the convolutional LSTMs is
+ implemented that only convolves the input by stacking three layers in front
+ of an conventional LSTM.
+ This not only simplyfies the hyperparamter tuning but also gives the opportunit
+y to test tuned conventional LSTM models with and without preceding convolutiona
+l layers.
+ These kind of models are usually refered as CNN LSTM in the literature
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "CNN LSTM"
+description "LSTM Network with a preceeding convultional layer"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+In case of a CNN LSTM, the input is first passed through a one 1D convolutional
+ layer
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+www.tensorflow.org/api_docs/python/tf/keras/layers/Conv1D
+\end_layout
+
+\end_inset
+
+, then a 1D max pooling layer
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+www.tensorflow.org/api_docs/python/tf/keras/layers/MaxPool1D
+\end_layout
+
+\end_inset
+
+ is applied, before reconverted with a TimeDistributed layer
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+www.tensorflow.org/api_docs/python/tf/keras/layers/TimeDistributed
+\end_layout
+
+\end_inset
+
+ such that the subsequent LSTM Layers are able to process it.
+ The following example provides an intuition of what is happening in those
+ layers.
+ Given three Assets, the flattened lower half of the covariance matrix has
+ lenght 6 and the look back of the LSTM is set at 32.
+ That means that every input 
+\begin_inset Formula $I$
+\end_inset
+
+ for the LSTM has a shape of 
+\begin_inset Formula $I\in\mathbb{R}^{32\times6}$
+\end_inset
+
+.
+ The convolutional layer now applies a filter to a subsection of the input
+ data by multiplying a fraction of the input 
+\begin_inset Formula $I[1,...,k;1,...,6]\in\mathbb{R}^{k\times6}$
+\end_inset
+
+ with a kernel matrix 
+\begin_inset Formula $F\in\mathbb{R}^{k\times6}$
+\end_inset
+
+ element wise.
+ 
+\begin_inset Formula $k$
+\end_inset
+
+ describes the 
+\shape italic
+kernel size,
+\shape default
+ which is a hyper-parameter that will be discussed and tuned in section
+ 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "subsec:Hyperparameter-Search"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ The resulting matrix is then added up such that the final result is a scalar.
+ Then the procedure moves to the next fraction of the input 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $I[1+s,...,k+s;1,...,6]\in\mathbb{R}^{k\times6}$
+\end_inset
+
+.
+ The stride 
+\begin_inset Formula $s$
+\end_inset
+
+ thereby is the stepsize and fixed to 
+\begin_inset Formula $s=1$
+\end_inset
+
+ for this study.
+ Zero-padding is used such that the input has the same lengh as the input
+ resulting in a result of shape 
+\begin_inset Formula $R_{filter}\in\mathbb{R}^{32\times1}$
+\end_inset
+
+ per filter.
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ Since the single elements of the filter 
+\begin_inset Formula $F$
+\end_inset
+
+ are subject to learning, it is useful to use not only one but many so that
+ each can spezialise in highligthing different patterns in the data.
+ Consequently, the number of 
+\shape italic
+filters
+\shape default
+ determines the dimensionality of the output and is another hyperparamter
+ to be tuned.
+ The resulting shape of the convolutional layer is 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $R_{conv}\in\mathbb{R}^{32\times filters}$
+\end_inset
+
+.
+ The next layer is a 1D Max Pooling Layer, which takes a one dimensional
+ input slice and returns it's maximum value.
+ With the 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+window
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ size (
+\family default
+\series default
+\shape italic
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+pool size
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+) being the only hyperparamter needed to be tuned
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+.
+ So for a pool size of 2 the result would be a matrix of shape 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+
+\begin_inset Formula $R_{maxpool}\in\mathbb{R}^{16\times filters}$
+\end_inset
+
+ .
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\xout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ Afterwards, the layer TimeDistributed flattens the input tensor again such
+ that subsequent LSTM layer can handle the data.
+ Both of the the last two layers are not subject to training because they
+ only transform the data.
+ The general idea behind this procedure is noise reduction while more emphasis
+ is put on distinct patterns and extreme events in the data, which simplifies
+ learning.
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Literature Review
+\end_layout
+
+\begin_layout Subsubsection*
+Feedforward Neural Networks
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citet
+key "bartlmae2000measuring"
+literal "false"
+
+\end_inset
+
+ successfully apply a FNN for risk management and forecasting daily volatilities.
+ They are able to demonstrate a that FNNs underestimate risk less often
+ than GARCH
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "GARCH"
+description "Generalized AutoRegressive Conditional Heteroscedasticity"
+literal "false"
+
+\end_inset
+
+ models.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "anders1998improving"
+literal "false"
+
+\end_inset
+
+ as well as 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "meissner2001capturing"
+literal "false"
+
+\end_inset
+
+ find that especially the MLP delivers a significantly better option pricing
+ performance that the well known model by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "black1973pricing"
+literal "false"
+
+\end_inset
+
+ when using i.a.
+ GARCH volatility forecasts as inputs.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "yu2006currency"
+literal "false"
+
+\end_inset
+
+ use general regression neural networks (GRNN)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "GRNN"
+description "General Regression Neural Network"
+literal "false"
+
+\end_inset
+
+ to forecast shocks in the south east asian economies.
+ By framing the experiment as a classification problem, they find that GRNNs
+ improve forecasts of regressions techniques such as logit and probit models.
+ A recent study by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "arneric2018neural"
+literal "false"
+
+\end_inset
+
+ finds that a hybrid approach using a FNN heterogeneous autoregressive (HAR)
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "HAR"
+description "Heterogeneous AutoRegressive"
+literal "false"
+
+\end_inset
+
+ model to forecast realized variance yield better in sample results but
+ does not improve out of sample accuracy.
+ Using hybrid ANN architectures for volatility forecasting has proven to
+ be useful in other studies as well 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "kristjanpoller2018hybrid,sallehuddin2009hybrid"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+One major shortfall of FNNs, however, is the fact that they map input data
+ directly to the output labels when learning.
+ That makes it challenging to learn patterns in the context of time series
+ since FNNs do not exhibit any memory state and consider every training
+ example in an isolated way.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+Recurrent Neural Networks
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citet
+key "tino2001financial"
+literal "false"
+
+\end_inset
+
+ use an Elman RNN with one hidden layer for volatility trading.
+ They notice that their RNN behaves like a limited memory source and hardly
+ beats classical fixed order Markov models.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "dunis2002forecasting"
+literal "false"
+
+\end_inset
+
+, however, use an slightly different architecture that loops back from the
+ output instead of the hidden layer.
+ They find that a FX option straddle trading strategy based on their RNN
+ forecast for historical volatility is able to beat the GARCH benchmark
+ in the out-of-sample period.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "bekiros2008direction"
+literal "false"
+
+\end_inset
+
+ use a volatility based RNN to predict direction of change in the market.
+ They find that this approach can especially improve trading performance
+ during bear markets.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "vejendla2013evaluation"
+literal "false"
+
+\end_inset
+
+ find that RNNs exhibit a lower mean squared error when predicting historical
+ volatility than FNNs do.
+ Other approaches use hybrid models or sentiment analysis of news data in
+ order to predict the volatility of stocks 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "liu2017stock"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+When it comes to time series, it is very challenging for RNNs to to learn
+ long term dependencies when being trained with gradient descent 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "bengio1994learning"
+literal "false"
+
+\end_inset
+
+.
+ The reason for that is that during back propagation the multiplication
+ of the Jacobian matrices leads to vanishing or exploding gradients which
+ results in unreasonable weight updates 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "pascanu2013difficulty"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection*
+Echo State Networks
+\end_layout
+
+\begin_layout Standard
+Even though ESNs have some very feasible properties for time series forecasting,
+ their application in finance is still in the early stage.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "lin2009short"
+literal "false"
+
+\end_inset
+
+, however, find that ESNs outperform conventional ANN architectures when
+ it comes to short term stock price predictions.
+ Their benchmark includes a FNN, an Elman RNN and an ANN with radial basis
+ functions as activation function.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "grigoryeva2014stochastic"
+literal "false"
+
+\end_inset
+
+ assess the performance of ESN when forecasting conditional realized variances.
+ They find that especially parallel configurations with multiple parallel
+ reservoirs exhibit good forecasting results for realized volatility.
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Subsubsection*
+Long Short Term Memory Neural Networks
+\end_layout
+
+\begin_layout Standard
+(...) 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "yu2018forecasting"
+literal "false"
+
+\end_inset
+
+ find that a LSTM exhibit lower error measures than GARCH models when forecastin
+g volatility.
+ Especially long term dependencies are better captures by the LSTM model.
+ 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "kim2018forecasting"
+literal "false"
+
+\end_inset
+
+ develop hybrid LSTM networks that use multiple (E)GARCH models as input
+ for forecasting volatility of the KOSPI 200 Index.
+ They find that especially hybrid architectures can improve forecasts significan
+tly.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Methodology
+\end_layout
+
+\begin_layout Subsection
+Data
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0col%
+width "50col%"
+status open
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/RVAppl.png
+	scale 45
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Daily Realized Volatility
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "RV"
+description "Realized Volatility"
+literal "false"
+
+\end_inset
+
+: AAPL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/AutoCorrRVAppl.png
+	scale 45
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Autocorrelation-Daily-RV:"
+
+\end_inset
+
+Autocorrelation Daily RV: AAPL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Thesis/02_Pictures/pAutoCorrRVAppl.png
+	scale 45
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Partial Autocorrelation Daily RV: AAPL
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Data-Overview"
+
+\end_inset
+
+Data Overview
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Realized volatility matrices computed using intraday data were generously
+ made available to us by Lyudmila Grigoryeva and Oleksandra Kukharenko from
+ the Universität Konstanz.
+ The dataset conatains daily realized covariance matrices in the time period
+ from 01.01.1999 until 31.12.2008 covering the spikes of the dotcom bubble and
+ the finacial crisis.
+ For each of the 50 tickers there exist 2484 datapoints.
+ It has been sampled at 6 minute frequency in order to minimize empty intervalls
+, which are in case interpolated linearly.
+ Dividens and splits are being corrected as well.
+ The covariance estimates are obatined by using open to close data, which
+ improves the efficiency of the estimation significantly, reason being that
+ the lack of overnight high frequency trading data combined with large overnight
+ returns pose a challege when it comes to estimating realized covariances.
+ For that reason as suggested by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "andersen2010parametric"
+literal "false"
+
+\end_inset
+
+, the overnight returns are handeled as determinitic jumps and left out
+ of the estimation.
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Data-Overview"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ shows the unscaled daily realized volatility of the Apple Inc.
+ Stock as well as its (partial) autocorrelation.
+ Especially in Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Autocorrelation-Daily-RV:"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, it becomes evident that there significant autocorrelated structure in
+ the the data that can modeled.
+\end_layout
+
+\begin_layout Standard
+Before beeing used, the data is log transformed and scaled.
+ In a univariate setting, a log transform is sufficient, whereas in the
+ multivariate setting one has to rely on the matrix logarithm.
+ This (matrix) log transform ensures that you can apply the (matrix) exponential
+ function resulting in positive volatility forecasts.
+ A range scaler is used to scale the data in an intervall between zero and
+ one
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Scikit-learn: MinMax Scaler 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "scikit-learn"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+.
+ The scaling procedure aims on improving the learning speed of the machine
+ learning models.
+ The the activation functions of the LSTMs have their activation threshold
+ at zero and the weights are initialized with a random uniform between zero
+ and one, consequently the optimal weights are likely to be found in this
+ magnitude when the data is scaled accordingly.
+ Unscaled data inputs can lead to gradients that are either too big or to
+ small to solve the optimization effectivly 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "lecun1998efficient"
+literal "false"
+
+\end_inset
+
+.
+ As for the ESN, data scaling is also benefical in order to prevent the
+ reservoir state 
+\begin_inset Formula $x(n)$
+\end_inset
+
+ from taking outlier values that are consequently not well understood by
+ the readout layer 
+\begin_inset Formula $W^{out}$
+\end_inset
+
+ 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "lukovsevivcius2012practical"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Hyper-parameter Search
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Hyperparameter-Search"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to perform well, the hyper-parameters of the machine learning models
+ have to be set up correctly.
+ In this procudure, called hyperparameter- or neural architecture seach,
+ a large number of models with different hyper-parameters are trained and
+ subsequently assessed on unknown data.
+ The parameters for the models are choosen by either by random sampling,
+ a systematic grid search or bayesian techniques.
+\end_layout
+
+\begin_layout Standard
+Random sampling of the parameters is a good way to start if the data provides
+ little intuition or the researcher lacks experience in the field.
+ In a few cases, this approach even proved to be computionally more efficient
+ than the other methods 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "bergstra2012random"
+literal "false"
+
+\end_inset
+
+.
+ This unstructured approach complicates a iterative developemet though.
+ The most common used, yet computaionally most expensie procedure is grid
+ search, where all permutations of parameters are tried.
+ The simplicity of this approach is very appealing since by adapting the
+ search range and granularity you can iteratively move to an optimum.
+ Beeing the most sophisticated algorithm, bayesian search uses the results
+ of the past parameter sets to fit a probabilistic model and then estimates
+ which parameters to try next.
+ As the only 
+\begin_inset Quotes eld
+\end_inset
+
+smart
+\begin_inset Quotes erd
+\end_inset
+
+ algorithm of the three, it comes with the disadvantage that it needs many
+ iterations and is essentially a black box.
+ See 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "bengio2012practical,Feurer2019"
+literal "false"
+
+\end_inset
+
+ for a detailed assessment of the search algorithms and their implementations.
+\end_layout
+
+\begin_layout Standard
+Since the number of hyper-parameters as well as the computational cost for
+ LSTMs is much higher that the one of the ESNs, the ESNs will use bayesian
+ optimization whereas the LSTMs will rely on the classical grid search.
+ This way it is possible to let the ESN optimization test many model specificati
+ons whereas the LSTMs can benefit of manual adjustment and interference
+ in the process with fewer testing iterations.
+ As for the practical implementation of the hyper-parameter tuning, is it
+ recommended to implement the LSTMs in a GPU optimized version 
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+CuDNNLSTM layers in the tensorflow framework 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "tensorflow2015-whitepaper"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ so that they run on accelerated hardware
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+e.g.
+ 
+\size normal
+www.colab.research.google.com
+\end_layout
+
+\end_inset
+
+.
+ Afterwards the optimal parameter set is recompiled, trained and assessed
+ in a CPU version when compared to the ESN.
+\end_layout
+
+\begin_layout Standard
+Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Hyperparameter-Search-Range"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ shows the initial and consequently largest search range for the models.
+ After running a few experimental searches, the search window is iteratively
+ narrowed, but expanded again if the optimal result lies on a boundary or
+ overall performance is bad.
+ For the ESN, a bayesian optimization run performed 1000 random exploration
+ steps before performing 1000 iterations of bayesian optimization in the
+ search window.
+ For the LSTMs, grid searches usually had about 200 models trained and assessed.
+ After each run the search window is readjusted.
+ In total about 40'000 ESNs and 4'000 LSTM were assessed on (DATA Period)
+ using the RMSE (see Section 4.4) equally averaged over the 30 day ahead
+ forecast.
+ A weighted average did not seem to improve the results.
+\end_layout
+
+\begin_layout Standard
+I order to derive parameter sets for three different models, the parameters
+ were adjusted slightly manually to obtain two additional hyper-parameter
+ sets, next to the optimal ones.
+ Especially the optimization results for the LSTMs are very close together
+ in terms of error so usually more than just the optimal model was taken
+ into consideration when choosing hyper-parameters.
+ At this point is important to note that even after an extensive hyper-parameter
+ search, one cannot prove that this parameter set is indeed the global optimum
+ one for this problem.
+ So with a wider hyperparamter space and more computational power, even
+ better models might be found.
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="12" columns="6">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="0pt">
+<column alignment="left" valignment="top" width="0pt">
+<column alignment="left" valignment="top" width="0pt">
+<column alignment="left" valignment="top" width="0pt">
+<column alignment="left" valignment="top" width="0pt">
+<column alignment="left" valignment="top" width="0pt">
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ESN
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Range
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+LSTM
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Range
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Internal nodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $40$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $800$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Layers
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $3$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Spectral radius
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $1.5$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Nodes/layer
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $4$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $128$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Regression λ
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $1\mathrm{e}{-6}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Dropout
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.2$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Connectivity
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.2$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.01$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Regularization
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Leaking rate
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Lookback
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $8$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $64$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Bidirectional
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $True$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $False$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Conv.
+ layer
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $True$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $False$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Filters
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $4$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $10$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Kernel size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $4$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $30$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Pool Size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $2$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $4$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Hyper-parameter Search Range
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Hyperparameter-Search-Range"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to increase explanatory power all test runs are initialized with
+ the same random seed for the initial weights.
+ For the ESNs, the parameters 
+\shape italic
+input scaling
+\shape default
+ and 
+\shape italic
+input shift
+\shape default
+ are omitted since the data is scaled as described in section 4.1.
+ Test runs witch included both parameters showed an optimal value close
+ to zero for the 
+\shape italic
+input shift 
+\shape default
+and one for the 
+\shape italic
+input scaling
+\shape default
+ so both parameters were fixed there.
+\end_layout
+
+\begin_layout Standard
+The LSTM parameters 
+\shape italic
+conv filters
+\shape default
+ and 
+\shape italic
+conv kernels
+\shape default
+ only apply when 
+\shape italic
+conv layer
+\shape default
+ is 
+\begin_inset Formula $True$
+\end_inset
+
+.
+ For that reason, it is more practical to have two parallel runs with and
+ without a preceding convolutional layer or fix all the parameters and only
+ optimize the ones from the convolutional layer.
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Float table
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="12" columns="8">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="0pt">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top" width="0pt">
+<column alignment="center" valignment="top">
+<column alignment="left" valignment="top" width="0pt">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+ESN
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+LSTM
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Internal nodes
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $40$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $80$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $120$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Layers
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $2$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $2$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Spectral radius
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.2$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.3$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.4$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Nodes/layer
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $16$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $16;16$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $conv;8$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Regression λ
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $1\mathrm{e}{-6}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $1\mathrm{e}{-5}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $1\mathrm{e}{-4}$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Dropout
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.0$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.0$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.0$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Connectivity
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.25$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.05$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Regularization
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.001$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Leaking rate
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.01$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.01$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $0.1$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Lookback
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $32$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $32$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $32$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Bidirectional
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $False$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $True$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $False$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Conv.
+ layer
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $False$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $False$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $True$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Filters
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $8$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Kernel size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $4$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Pool Size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+-
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+\begin_inset Formula $2$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Hyper-parameter Search Results
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Model Implementation
+\end_layout
+
+\begin_layout Standard
+In order to keep results consistent and reproducible, the model parameters
+ in Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Hyperparameter-Search"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ have to face the same embedding environment when tested.
+ For that reason the random seed and distributions for the initialization
+ procedures are kept constant all the time.
+\end_layout
+
+\begin_layout Standard
+For the ENS, the internal weights are initialized with a standard normal
+ distribution.
+ The activation function for the reservoir state is sigmoid.
+\end_layout
+
+\begin_layout Standard
+The LSTMs are initialized with with a random uniform distribution and bias
+ values are initially set to one.
+ In this implementation stateless LSTMs are used, since initial experiments
+ with stateful cells did not significantly increase performance.
+ Whereas the LSTM cells use a ReLU activation, the final dense layer of
+ the LSTM models has a sigmoid activation function.
+\end_layout
+
+\begin_layout Standard
+initialization values
+\end_layout
+
+\begin_layout Standard
+In order to smoothen and improve the forecasting capabilities, multiple
+ models are combined in an aggregated expert model, which is basically an
+ adaptive weighted average of the input models.
+ This hedging algorithm 
+\begin_inset CommandInset citation
+LatexCommand citep
+key "freund1997decision,freund1999adaptive"
+literal "false"
+
+\end_inset
+
+ takes 
+\begin_inset Formula $K$
+\end_inset
+
+ models as input and defines an initial weight array 
+\begin_inset Formula $w_{0}^{h}:=(w_{0}^{(1),h},...,w_{0}^{(K),h})^{T}$
+\end_inset
+
+ such that 
+\begin_inset Formula $\sum w_{0}^{h}=1$
+\end_inset
+
+.
+ The algorithm's forecast for 
+\begin_inset Formula $h$
+\end_inset
+
+ days in the future is 
+\begin_inset Formula $\hat{h}_{t,h}=w_{t}^{h}h_{t,h}^{T}$
+\end_inset
+
+ with 
+\begin_inset Formula $h_{t,h}^{T}=(h_{t}^{(1),t},...,h_{t}^{(K),h})^{T}$
+\end_inset
+
+ being the forecasts of the input models at time 
+\begin_inset Formula $t$
+\end_inset
+
+.
+ The loss for the one-step ahead forecast of input model 
+\begin_inset Formula $j$
+\end_inset
+
+ is then computed with 
+\begin_inset Formula $\mathcal{L}_{t-1}^{j}(\sigma_{t},\hat{h}_{t-1}^{j})$
+\end_inset
+
+ as 
+\begin_inset Formula $\sigma_{t}$
+\end_inset
+
+ is revealed.
+ Before forecasting one step further the weights are adapted with 
+\begin_inset Formula 
+\[
+w_{t}^{(j)}:=w_{t}^{(j)}exp(-\eta\mathcal{L}_{t-1}^{j})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula $\eta$
+\end_inset
+
+ is the update rate.
+ For this study it is set to 
+\begin_inset Formula $\eta=2$
+\end_inset
+
+ and the loss function uses the RMSE (see section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "subsec:Evaluation"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+).
+ For further reading and notation see 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "rcparttwo"
+literal "false"
+
+\end_inset
+
+.
+ Since only the model forecast is used, expert models are input model agnostic
+ meaning that you not only can create expert models with ESNs and LSTMs
+ but also hybrid versions.
+\end_layout
+
+\begin_layout Standard
+All the models are assessed, using the expanding window approach, which
+ implies that all the data is available to the models when refitting each
+ day.
+ For computational efficiency and learning effectiveness, the LSTM is refitted
+ with 250 iterations using only the last 128 observations and a very small
+ learning rate of 
+\begin_inset Formula $1\mathrm{e}{-7}$
+\end_inset
+
+.
+ The ESN uses the whole past data with 100 forget points.
+\end_layout
+
+\begin_layout Subsection
+Evaluation
+\begin_inset CommandInset label
+LatexCommand label
+name "subsec:Evaluation"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Each of the models (ESN, LSTM and HAR) is set up such that at any given
+ 
+\begin_inset Formula $t$
+\end_inset
+
+ it produces a one step ahead forecast 
+\begin_inset Formula $\hat{H}_{t+1}\in\mathbb{R}^{K\times K}$
+\end_inset
+
+ with 
+\begin_inset Formula $K$
+\end_inset
+
+ being the number of assets.
+ The forecast is then appended to the input vector for the next day such
+ that iteratively a 30 day ahead forecast is obtained.
+ The final forecast tensor 
+\begin_inset Formula $\dot{H}_{t}\in\mathbb{R}^{30\times K\times K}$
+\end_inset
+
+ is then rescaled before the matrix exponential function is applied element
+ wise on each day.
+ The actual realized covariances 
+\begin_inset Formula $\dot{\varSigma_{t}}\in\mathbb{R}^{30\times K\times K}$
+\end_inset
+
+ for the forecasting period are then used to calculate an scalar error for
+ each day resulting in an error vector 
+\begin_inset Formula $\epsilon_{t}=\mathcal{L}(\hat{H}_{t},\varSigma_{t})\in\mathbb{R}^{30\times1}$
+\end_inset
+
+.
+ Finally the average error is calculated element wise for every 
+\begin_inset Formula $t_{0},...,t_{N}$
+\end_inset
+
+ resulting in 
+\begin_inset Formula $\dot{\epsilon}\in\mathbb{R}^{30\times1}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Following 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "rcparttwo"
+literal "false"
+
+\end_inset
+
+, three consistent error measures, namely the Root Mean Squared Error (RMSE
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "RMSE"
+description "Root Mean Squared Error"
+literal "false"
+
+\end_inset
+
+), the Kullback Leibler or Q-Loss (QLIK
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "QLIK"
+description "Kullback Leibler Loss"
+literal "false"
+
+\end_inset
+
+) and the L1-Norm were chosen to evaluate the multivariate forecasts.
+ For an in depth assessment of those and other error measures for forecasting
+ volatility see 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "laurent2013loss,patton2011volatility"
+literal "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}^{RMSE}(\hat{H}_{t},\varSigma_{t})=\sqrt{(\sigma_{t}^{v}-\hat{h}_{t}^{v})^{T}(\sigma_{t}^{v}-\hat{h}_{t}^{v})}\label{eq:RMSE}
+\end{equation}
+
+\end_inset
+
+ with 
+\begin_inset Formula $\hat{h_{t}^{v}},\sigma_{t}^{v}$
+\end_inset
+
+ being equal to
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\xout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\begin_inset Formula $vech(\hat{H}_{t})$
+\end_inset
+
+ and 
+\begin_inset Formula $vech(\varSigma_{t})$
+\end_inset
+
+ respectively.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}^{QLIK}(\hat{H}_{t},\varSigma_{t})=log\,det\hat{H}_{t}+trace\left\{ \widehat{H}_{t}^{-1}\hat{\varSigma_{t}}\right\} \label{eq:QLIK}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathcal{L}^{L1Norm}(\hat{H}_{t},\varSigma_{t})=\parallel\varSigma_{t}-\hat{H_{t}}_{t}\parallel_{F}=\sqrt{\sum_{i=1}^{m}\sum_{j=1}^{n}\mid\varSigma_{tij}-\hat{H_{tij}}\mid^{2}}\label{eq:L1Norm}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Besides the error measures, the model confidence set (
+\begin_inset CommandInset nomenclature
+LatexCommand nomenclature
+symbol "MCS"
+description "Model Confidence Set"
+literal "false"
+
+\end_inset
+
+) by 
+\begin_inset CommandInset citation
+LatexCommand citet
+key "hansen2011model"
+literal "false"
+
+\end_inset
+
+ is used to assess model performance.
+ (...)
+\end_layout
+
+\begin_layout Section
+Empirical Results
+\end_layout
+
+\begin_layout Standard
+The empirical results do not seem to speak a clear language, which is mostly
+ due to the nature of the underlying data.
+ The irregular regime changes in volatility require the models to balance
+ between adapting fast but also have the ability to consider structure in
+ the data that is far back in time.
+ The ESNs and LSTMs handle those two tasks with varying degrees of success.
+ Figure 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "fig:Results-change-Regime"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ shows the result of 3 ESNs and LSTMs respectively in the time period January
+ 1
+\begin_inset script superscript
+
+\begin_layout Plain Layout
+st.
+\end_layout
+
+\end_inset
+
+ 2006 until December 31
+\begin_inset script superscript
+
+\begin_layout Plain Layout
+th.
+\end_layout
+
+\end_inset
+
+ 2008.
+ This period includes the initial months of the financial crisis, which
+ was triggered by the insolvency of Lehman Brothers on September 15
+\begin_inset script superscript
+
+\begin_layout Plain Layout
+th
+\end_layout
+
+\end_inset
+
+2008.
+ In Figure 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "fig:30-day-ahead-w-R"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ you can see that the LSTM experiences very high one day ahead forecasting
+ errors and the end of the test set period, which obviously drives up the
+ RMSE for the whole period quite significantly.
+ In this test set, the ESN Experts are having the highest models confidence,
+ whereas the LSTM has a lower model confidence that the HAR-Model.
+\end_layout
+
+\begin_layout Standard
+Figure 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "fig:Results-no-change-Regime"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ covers the time period from January 1
+\begin_inset script superscript
+
+\begin_layout Plain Layout
+st.
+\end_layout
+
+\end_inset
+
+ 2006 to June 30
+\begin_inset script superscript
+
+\begin_layout Plain Layout
+th.
+\end_layout
+
+\end_inset
+
+ 2008, which is half a year shorter and consequently does not cover the
+ fiancial crisis.
+ The same models perform now very different.
+ In this case, the LSTM Experts seem to exhibit by far the highest model
+ confidence.
+ In this case it also interesting to note that the single ESN and LSTM model
+ implemention are excluded from the model confidence set.
+ The one day ahead forecasting error is now also much lower and the LSTMs
+ seem to level the ESN model performance in turbulent times.
+ This consequently leads to one of the key findings which is that LSTMs
+ capture structure better but are inferior when it comes to adapting to
+ new volatility regimes.
+ Looking at the mathematical structure of the models, this result doesn't
+ come surprising.
+ In the given case, the ESNs can readjust their weights of the readout layer
+ completly at each iteration whereas the LSTMs only can adjust their weights
+ incrementaly thus taking more time to decrease the error.
+ Like mentioned above, the hyperparamters for the LSTM readjustment process,
+ 
+\shape italic
+number of epochs 
+\shape default
+and the 
+\shape italic
+learning rate
+\shape default
+ , influence model performance quite significantly.
+ By increasing both, one could achieve a better ability to adapt to regimes
+ more quickly at the cost of general model precision.
+ In this case a fairly low learning rate was used (see Chapter 
+\begin_inset CommandInset ref
+LatexCommand vref
+reference "subsec:Hyperparameter-Search"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+), which can lead to an overfitting to the past data points and the observed
+ performance pattern of the LSTMs.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Results/Figure19a2.png
+	width 8.5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+30 day ahead forecasting error
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:30-day-ahead-w-R"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Results/Figure19a4.png
+	width 10cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+One day ahead forecasting error through time
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:One-day-ahead-w-R"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Results with a change of regime
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Results-change-Regime"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Results/Figure20a2.png
+	width 8.5cm
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+30 day ahead forecasting error
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:30-day-ahead-wo-RegimeChange"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename /Users/lukas/Desktop/HSG/2-Master/4_Masterthesis/Results/Figure20a4.png
+	width 10cm
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+One day ahead forecasting error through time
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:One-day-ahead-wio-RegimeChange"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Results without a change of regime
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Results-no-change-Regime"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Conclusion
+\end_layout
+
+\begin_layout Standard
+Ausblick
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset citation
+LatexCommand citet
+key "binkowski2017autoregressive"
+literal "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset nomencl_print
+LatexCommand printnomenclature
+set_width "auto"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+btprint "btPrintCited"
+bibfiles "refs"
+options "plain"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

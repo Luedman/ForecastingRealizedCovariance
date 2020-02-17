@@ -3,7 +3,7 @@
 # Author: Lukas Schreiner, 2020
 #
 # The code in this file is inspired by an ESN implementation in MATLAB by H. Jaeger
-# Jaeger, Herbert, "The echo state approach to analysing and training recurrent neural networks-with an erratum note", 
+# Jaeger, Herbert, "The echo state approach to analysing and training recurrent neural networks-with an erratum note",
 # Bonn, Germany: German National Research Center for Information Technology GMD Technical Report 148, 34 (2001), pp. 13.
 
 # Python Packages
@@ -365,6 +365,7 @@ class ESNmodel:
 
         return multiStepForecast, actual
 
+
 def bayesianOptimization(dataPath="./Data/"):
     # Hyperparameter Bayesian Search
     print("Bayesian Optimization")
@@ -404,7 +405,7 @@ def bayesianOptimization(dataPath="./Data/"):
             nOutputNodes=data.noTimeSeries,
             hyperparameter=hyperparameterESN,
         )
-        '''
+        """
         error = np.average(
             dataUtils.calculateErrorVectors(
                 data,
@@ -416,7 +417,7 @@ def bayesianOptimization(dataPath="./Data/"):
                 startInd=splitIndex,
             ).errorVector["RMSE"]
         )
-        '''
+        """
         ESN.fit(data, 100)
         error = ESN.test(data.xTrain())
 
@@ -437,8 +438,7 @@ def bayesianOptimization(dataPath="./Data/"):
 
 
 if __name__ == "__main__":
-    # uncomment the function needed in oder to run. 
+    # uncomment the function needed in oder to run.
 
     bayesianOptimization()
-    # gridSearch()
     # evaluateESN()

@@ -2,14 +2,15 @@
 # Masterthesis: Forecasting Realized Covariance with LSTM and Echo State Networks
 # Author: Lukas Schreiner, 2020
 #
-# Freund, Yoav and Schapire, Robert E, "A decision-theoretic generalization of on-line learning and an application to boosting", 
+# Freund, Yoav and Schapire, Robert E, "A decision-theoretic generalization of on-line learning and an application to boosting",
 # Journal of computer and system sciences 55, 1 (1997), pp. 119--139.
-# Freund, Yoav and Schapire, Robert E, "Adaptive game playing using multiplicative weights", 
+# Freund, Yoav and Schapire, Robert E, "Adaptive game playing using multiplicative weights",
 # Games and Economic Behavior 29, 1-2 (1999), pp. 79--103.
 
 import numpy as np
 import EchoStateNetworks, LongShortTermMemoryNetworks
 from sklearn.metrics import mean_squared_error
+
 
 class HedgingAlgorithm:
     def __init__(self, modelList, modelName, updateRate=1):

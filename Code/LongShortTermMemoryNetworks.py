@@ -2,7 +2,7 @@
 # Masterthesis: Forecasting Realized Covariance with LSTM and Echo State Networks
 # Author: Lukas Schreiner, 2020
 #
-# Hochreiter, Sepp and Schmidhuber, Jürgen, "Long short-term memory", 
+# Hochreiter, Sepp and Schmidhuber, Jürgen, "Long short-term memory",
 # Neural computation 9, 8 (1997), pp. 1735--1780.
 
 from tensorflow import __version__ as tfVersion

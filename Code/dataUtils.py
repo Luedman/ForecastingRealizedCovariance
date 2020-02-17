@@ -213,7 +213,7 @@ def createVarianceVector(data, assetList, dateIndex):
 
 
 def covMatFromVector(varianceVector, noAssets):
-    # Convert a covariance matrix from a flattend matrix 
+    # Convert a covariance matrix from a flattend matrix
 
     covarianceMatrix = np.zeros((noAssets, noAssets))
     covarianceMatrix.T[np.tril_indices(noAssets, 0)] = varianceVector
@@ -392,7 +392,6 @@ def calculateErrorVectors(
             np.concatenate(errorMatrices[errorType], axis=1), axis=1, keepdims=True
         )
 
-        
         def showForecast(errorType):
             # Debug Function
 

@@ -6,12 +6,15 @@ from matplotlib import pyplot as plt
 from arch.bootstrap import MCS
 from scipy.stats import ttest_ind
 import numpy as np
+
 root_path = "./gdrive/My Drive/Colab Notebooks/Data/"
+
 
 def generator(input_list):
     while True:
         for color in input_list:
             yield color
+
 
 def defineListyle(evaluation, lstmColors, esnColors):
 
@@ -40,8 +43,11 @@ def defineListyle(evaluation, lstmColors, esnColors):
 
     return color, linestyle, marker
 
+
 lstmColors = generator(["crimson", "orangered", "salmon", "darkred"])
-esnColors = generator(["cornflowerblue", "blue","navy","darkblue","royalblue","indigo"])
+esnColors = generator(
+    ["cornflowerblue", "blue", "navy", "darkblue", "royalblue", "indigo"]
+)
 
 
 def plotErrorVectors(
@@ -104,13 +110,17 @@ def plotErrorVectors(
         testingRangeEndDate.year,
     )
 
-    chartTitle_30d = errorType + chartTitle + str(assetList).replace("[", "").replace("]", "").replace("'", "")
+    chartTitle_30d = (
+        errorType
+        + chartTitle
+        + str(assetList).replace("[", "").replace("]", "").replace("'", "")
+    )
     chart.set_title(chartTitle_30d)
 
     plt.legend(loc="upper left")
     plt.xlabel("Days Ahead")
     plt.tight_layout()
-    plt.savefig(errorType + '30d' + '.png', dpi=400)
+    plt.savefig(errorType + "30d" + ".png", dpi=400)
     plt.show()
 
     plt.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
@@ -127,7 +137,7 @@ def plotErrorVectors(
     )
 
     for evaluation in evalResults:
-        color, linestyle, marker = defineListyle(evaluation,lstmColors, esnColors)
+        color, linestyle, marker = defineListyle(evaluation, lstmColors, esnColors)
         oneDayAheadErrorVector = evaluation.oneDayAheadError[errorType]
         plt.plot(
             oneDayAheadErrorVector,
@@ -138,9 +148,11 @@ def plotErrorVectors(
             linestyle=linestyle,
             linewidth=1,
         )
-    chart_title_1d = chartTitleOneDayError + str(assetList).replace("[", "").replace("]", "").replace("'", "")
+    chart_title_1d = chartTitleOneDayError + str(assetList).replace("[", "").replace(
+        "]", ""
+    ).replace("'", "")
     plt.title(chart_title_1d)
     plt.xlabel("Days")
     plt.legend(loc="upper left")
-    plt.savefig(errorType + '1d' + '.png', dpi=400)
+    plt.savefig(errorType + "1d" + ".png", dpi=400)
     plt.show()

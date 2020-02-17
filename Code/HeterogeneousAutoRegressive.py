@@ -2,7 +2,7 @@
 # Masterthesis: Forecasting Realized Covariance with LSTM and Echo State Networks
 # Author: Lukas Schreiner, 2020
 #
-# Corsi, Fulvio, "A simple approximate long-memory model of realized volatility", 
+# Corsi, Fulvio, "A simple approximate long-memory model of realized volatility",
 # Journal of Financial Econometrics 7, 2 (2009), pp. 174--196.
 
 import dataUtils
@@ -12,6 +12,7 @@ from pandas import DataFrame
 from matplotlib import pyplot as plt
 
 import warnings
+
 warnings.filterwarnings("ignore")
 
 

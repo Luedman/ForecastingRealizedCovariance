@@ -1,48 +1,25 @@
-## Forecasting Realized Covariance Matrices with LSTM and Echo State Networks 
-Master Thesis
+## Master Thesis Forecasting Realized Covariance Matrices with LSTM and Echo State Networks
+### Code Appendix
 
-### 1.1 Models Univariate Forecasting of Realized Variance
 
-* LSTM
-    - 32 LSTM Cells, 1 Layer
-    - Adam Optimizer with learning rate decay & gradient clipping
-    - Dropout = 0.01
-    - Regularization = 0.001
-    - Activation Functions: Relu
-    - 5000 training epochs with early stopping
-* Echo State Network
-    - internalNodes : 100 
-    - spectralRadius: 0.17
-    - regressionLambda: 1.0
-    - connectivity: 0.011
-    - leakingRate': 0.08
-* Univariate HAR
-
-### 1.2 Models Univariate Forecasting of Realized Variance
-
-tbd
-
-### 2.1 Results Univariate 
-
-#### RMSE Error Measure
 <div align='center'>
-  <img src='Pictures/Figure1a.png'>
+  <img src='Pictures/Figure31a.png'>
 </div>
 
-#### QLIK Error Measure
 <div align='center'>
-  <img src='Pictures/Figure1b.png'>
+  <img src='Pictures/Figure31a2.png'>
 </div>
 
-### L1 Norm Error Measure
-<div align='center'>
-  <img src='Pictures/Figure1c.png'>
-</div>
+### Requirements:
+Python 3.6.9
 
-### 2.2 Results Multivariate
+* [Tensorflow](https://www.tensorflow.org/) 2.0.0
+* [Sklearn](https://scikit-learn.org/stable/) 0.21.3
+* [Pandas](https://pandas.pydata.org/) 0.25.2
+* [Matplotlib](https://matplotlib.org/) 3.1.1
+* [Scipy](https://www.scipy.org/) 1.3.1
+* [Bayesian Optimization](https://github.com/fmfn/BayesianOptimization) 1.1.0
+* [Numpy](https://numpy.org/) 1.17.2
+* [arch](https://github.com/bashtage/arch) 4.13
 
-tbd
-
-### 3. Data
-Oxford-Man Institute of Quantitative Finance
-Dataset can be found [here](https://realized.oxford-man.ox.ac.uk)
+The code was formatted using [Black](https://github.com/psf/black)

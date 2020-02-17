@@ -6,36 +6,28 @@ from matplotlib import pyplot as plt
 from arch.bootstrap import MCS
 from scipy.stats import ttest_ind
 import numpy as np
-from decimal import Decimal
+root_path = "./gdrive/My Drive/Colab Notebooks/Data/"
 
+def generator(input_list):
+    while True:
+        for color in input_list:
+            yield color
 
-def defineListyle(evaluation):
-
-    lstmColors = ["crimson", "orangered", "salmon", "darkred"]
-
-    esnColors = [
-        "blue",
-        "navy",
-        "darkblue",
-        "royalblue",
-        "indigo",
-        "deeskyblue",
-        "cornflowerblue",
-    ]
+def defineListyle(evaluation, lstmColors, esnColors):
 
     if evaluation.modelType == "HAR":
         color = "dimgray"
         linestyle = "-"
         marker = "None"
     if evaluation.modelType in ["ESN", "EchoStateExperts"]:
-        color = esnColors.pop(0)
+        color = esnColors.__next__()
         linestyle = ":"
         marker = "*"
         if evaluation.modelType == "EchoStateExperts":
             linestyle = "-"
             color = "midnightblue"
     if evaluation.modelType in ["LSTM", "LSTMExperts"]:
-        color = lstmColors.pop(0)
+        color = lstmColors.__next__()
         linestyle = "-."
         marker = "*"
         if evaluation.modelType == "LSTMExperts":
@@ -47,6 +39,9 @@ def defineListyle(evaluation):
         marker = "*"
 
     return color, linestyle, marker
+
+lstmColors = generator(["crimson", "orangered", "salmon", "darkred"])
+esnColors = generator(["cornflowerblue", "blue","navy","darkblue","royalblue","indigo"])
 
 
 def plotErrorVectors(
@@ -90,7 +85,8 @@ def plotErrorVectors(
         # Colors, labeling and line styles
         significantPoints = list(np.where(tTestResult[1] < alpha)[0])
         label = evaluation.modelName + " p: " + str(pValue)
-        color, linestyle, marker = defineListyle(evaluation)
+
+        color, linestyle, marker = defineListyle(evaluation, lstmColors, esnColors)
 
         chart.plot(
             evaluation.errorVector[errorType],
@@ -108,15 +104,13 @@ def plotErrorVectors(
         testingRangeEndDate.year,
     )
 
-    chart.set_title(
-        errorType
-        + chartTitle
-        + str(assetList).replace("[", "").replace("]", "").replace("'", "")
-    )
+    chartTitle_30d = errorType + chartTitle + str(assetList).replace("[", "").replace("]", "").replace("'", "")
+    chart.set_title(chartTitle_30d)
 
     plt.legend(loc="upper left")
     plt.xlabel("Days Ahead")
     plt.tight_layout()
+    plt.savefig(errorType + '30d' + '.png', dpi=400)
     plt.show()
 
     plt.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
@@ -133,7 +127,7 @@ def plotErrorVectors(
     )
 
     for evaluation in evalResults:
-        color, linestyle, marker = defineListyle(evaluation)
+        color, linestyle, marker = defineListyle(evaluation,lstmColors, esnColors)
         oneDayAheadErrorVector = evaluation.oneDayAheadError[errorType]
         plt.plot(
             oneDayAheadErrorVector,
@@ -144,10 +138,9 @@ def plotErrorVectors(
             linestyle=linestyle,
             linewidth=1,
         )
-    plt.title(
-        chartTitleOneDayError
-        + str(assetList).replace("[", "").replace("]", "").replace("'", "")
-    )
+    chart_title_1d = chartTitleOneDayError + str(assetList).replace("[", "").replace("]", "").replace("'", "")
+    plt.title(chart_title_1d)
     plt.xlabel("Days")
     plt.legend(loc="upper left")
+    plt.savefig(errorType + '1d' + '.png', dpi=400)
     plt.show()

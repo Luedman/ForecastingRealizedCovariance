@@ -31,7 +31,7 @@ try:
     runningInColab = True
 except:
     runningInColab = False
-    dataUtils.limitCPU(200)
+    dataUtils.limitCPU(250)
 
 
 
@@ -42,7 +42,7 @@ def evaluate(
     splitDate=None,
     dataLoadpath="./Data/",
     modelLoadpath="./Models/",
-    saveName="evaluation200601-200812_Univariate",
+    saveName="evaluation200601-200806_3Assets",
 ):
 
     # Load Data
@@ -53,12 +53,20 @@ def evaluate(
     trainingFraction = 0.95
     splitIndex = int(list(data.index).index(Timestamp(splitDate)))
 
-    esnParameterSet = {
+    esnParameterSetUnivariate = {
         "internalNodes": (40, 80, 120),
-        "spectralRadius": (0.2, 0.3, 0.4),
-        "regressionLambda": (1e-6, 1e-5, 1e-4),
-        "connectivity": (0.25, 0.1, 0.05),
-        "leakingRate": (0.01, 0.01, 0.1),
+        "spectralRadius": (0.5, 0.3, 0.1),
+        "regressionLambda": (1e-3, 1e-3, 1e-5),
+        "connectivity": (5/40, 5/80, 10/120),
+        "leakingRate": (0.3, 0.2, 0.2)
+    }
+
+    esnParameterSet = {
+        "internalNodes": (65, 70, 75),
+        "spectralRadius": (0.30, 0.35, 0.3),
+        "regressionLambda": (5e-5, 5e-5, 5e-5),
+        "connectivity": (10/80, 10/70, 10/75),
+        "leakingRate": (0.1, 0.2, 0.25)
     }
 
     # initialize the ESNs
@@ -74,9 +82,9 @@ def evaluate(
 
     HAR = HeterogeneousAutoRegressive.HARmodel()
 
-    ESN1 = initESN("ESN1", 1, esnParameterSet)
-    ESN2 = initESN("ESN2", 2, esnParameterSet)
-    ESN3 = initESN("ESN3", 3, esnParameterSet)
+    ESN1 = initESN("ESN1", 1, esnParameterSetUnivariate)
+    ESN2 = initESN("ESN2", 2, esnParameterSetUnivariate)
+    ESN3 = initESN("ESN3", 3, esnParameterSetUnivariate)
 
     ESNExperts = Hedging.HedgingAlgorithm(
         [deepcopy(ESN1), deepcopy(ESN2), deepcopy(ESN3)],
@@ -96,7 +104,7 @@ def evaluate(
 
     LSTM1e = LongShortTermMemoryNetworks.LSTMmodel(loadPath=modelLoadpath + "1-Asset-Model-1-LSTM.h5")
     LSTM2e = LongShortTermMemoryNetworks.LSTMmodel(loadPath=modelLoadpath + "1-Asset-Model-2-LSTM.h5")
-    LSTM3e = LongShortTermMemoryNetworks.LSTMmodel(loadPath=modelLoadpath + "1-Asset-Model-3-LSTM.h5") #3-LSTM.h5
+    LSTM3e = LongShortTermMemoryNetworks.LSTMmodel(loadPath=modelLoadpath + "1-Asset-Model-3-LSTM.h5")
 
     LSTMExperts = Hedging.HedgingAlgorithm(
         [LSTM1e, LSTM2e, LSTM3e], modelName="LSTMExperts", updateRate=2
@@ -116,8 +124,7 @@ def evaluate(
 
     HAR.fit(data.dataHARtrain())
 
-    modelList = [HAR, HybridExpert, ESN1, ESN2, ESN3 ,ESNExperts, LSTM1, LSTM2, LSTM3, LSTMExperts]
-    #modelList = [HAR, ESN1, LSTM1]
+    modelList = [HAR, ESN1, ESN2, ESN3, ESNExperts, HybridExpert, LSTM1, LSTM2, LSTM3, LSTMExperts]
 
     # Evaluate Models
     windowMode = "Expanding"
@@ -181,8 +188,7 @@ def loadfromSaved(saveName: str, show_only_models: list = None):
     assetList = loadedVars[3]
     data = loadedVars[4]
 
-    # ["RMSE", "QLIK", "L1Norm"]
-    for errorType in ["RMSE"]:
+    for errorType in ["RMSE", "QLIK", "L1Norm"]:
         errorFunctions.plotErrorVectors(
             evalResultsFiltered,
             errorType,
@@ -196,8 +202,9 @@ def loadfromSaved(saveName: str, show_only_models: list = None):
 
 
 if __name__ == "__main__":
+    #assetList = ["WMT","AAPL","ABT"]
     assetList = ["AAPL"]
     splitDate = dt.datetime(2006, 1, 3)
     endDate = dt.datetime(2008, 12, 31)
     evaluate(assetList, splitDate=splitDate, endDate=endDate)
-    #loadfromSaved(saveName="evaluation200601-200812")
+    #loadfromSaved(saveName="evaluation200601-20086_3Assets")

@@ -476,4 +476,5 @@ reduceLearningRate = ReduceLROnPlateau(
 def resetlr(epoch):
     return 0.00000001
 
+
 resetLearningRate = LearningRateScheduler(resetlr)

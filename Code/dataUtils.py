@@ -13,9 +13,6 @@ from matplotlib import pyplot as plt
 from itertools import combinations_with_replacement
 import datetime as dt
 
-from os import getpid
-from subprocess import Popen
-from multiprocessing import current_process
 
 import warnings
 
@@ -332,7 +329,7 @@ def calculateErrorVectors(
 
         return actual, forecast
 
-    errorTypesList = ["RMSE"]
+    errorTypesList = ["RMSE", "QLIK", "L1Norm"]
     errorMatrices = {"RMSE": [], "QLIK": [], "L1Norm": []}
     errorOneDay = {"RMSE": [], "QLIK": [], "L1Norm": []}
     avgErrorVectors = dict.fromkeys(errorTypesList)

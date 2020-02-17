@@ -373,7 +373,7 @@ def bayesianOptimization(dataPath="./Data/"):
     warnings.filterwarnings("ignore")
 
     # USER INPUT
-    assetList = ["WMT", "AAPL", "ABT"]
+    assetList = ["AAPL"]
 
     daysAhead = 30
     trainingFraction = 0.8
@@ -404,7 +404,7 @@ def bayesianOptimization(dataPath="./Data/"):
             nOutputNodes=data.noTimeSeries,
             hyperparameter=hyperparameterESN,
         )
-
+        '''
         error = np.average(
             dataUtils.calculateErrorVectors(
                 data,
@@ -416,25 +416,27 @@ def bayesianOptimization(dataPath="./Data/"):
                 startInd=splitIndex,
             ).errorVector["RMSE"]
         )
+        '''
+        ESN.fit(data, 100)
+        error = ESN.test(data.xTrain())
 
         del ESN
         return error * -1
 
     pbounds = {
-        "internalNodes": (50, 300),
-        "spectralRadius": (0.1, 1.2),
-        "regressionLambda": (0.001, 1e-12),
-        "connectivity": (0.01, 0.5),
-        "leakingRate": (0, 0.5),
+        "internalNodes": (30, 100),
+        "spectralRadius": (0.1, 0.5),
+        "regressionLambda": (0.001, 1e-5),
+        "connectivity": (0.01, 0.1),
+        "leakingRate": (0, 0.3),
     }
     optimizer = BayesianOptimization(f=esnEvaluation, pbounds=pbounds, random_state=1)
 
-    optimizer.maximize(init_points=1000, n_iter=1000)
+    optimizer.maximize(init_points=2000, n_iter=2000)
     print(optimizer.max)
 
 
 if __name__ == "__main__":
-    pass
     # uncomment the function needed in oder to run. 
 
     bayesianOptimization()
